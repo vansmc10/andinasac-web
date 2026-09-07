@@ -1,0 +1,363 @@
+<html lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary-fixed": "#304153",
+                    "error": "#9f403d",
+                    "inverse-surface": "#0b0f10",
+                    "error-container": "#fe8983",
+                    "surface-container": "#e7eff3",
+                    "secondary-fixed-dim": "#d2d4da",
+                    "primary-fixed": "#d2e4fb",
+                    "surface-variant": "#d7e5eb",
+                    "tertiary-fixed-dim": "#c8cdec",
+                    "on-primary-fixed-variant": "#4c5d70",
+                    "surface": "#f7fafc",
+                    "on-background": "#283439",
+                    "on-surface": "#283439",
+                    "outline-variant": "#a7b4ba",
+                    "on-tertiary": "#faf8ff",
+                    "surface-tint": "#4f6073",
+                    "primary": "#2d3748", /* Enhanced contrast primary */
+                    "on-primary-container": "#425366",
+                    "on-error": "#fff7f6",
+                    "surface-container-low": "#eff4f7",
+                    "on-error-container": "#752121",
+                    "inverse-primary": "#d5e7fe",
+                    "secondary": "#5c5f64",
+                    "on-secondary-fixed-variant": "#595c61",
+                    "tertiary-dim": "#4c526c",
+                    "on-secondary-fixed": "#3c4044",
+                    "primary-dim": "#1a202c",
+                    "on-surface-variant": "#374151", /* Higher contrast */
+                    "on-secondary": "#f7f9ff",
+                    "on-primary": "#ffffff",
+                    "tertiary-container": "#d6dbfb",
+                    "surface-container-highest": "#d7e5eb",
+                    "secondary-fixed": "#e0e2e8",
+                    "surface-dim": "#ccdde4",
+                    "on-tertiary-container": "#474d67",
+                    "surface-bright": "#f7fafc",
+                    "on-tertiary-fixed-variant": "#515771",
+                    "inverse-on-surface": "#4b5563",
+                    "tertiary-fixed": "#d6dbfb",
+                    "tertiary": "#585e78",
+                    "secondary-dim": "#505358",
+                    "primary-fixed-dim": "#c4d6ed",
+                    "on-secondary-container": "#4f5257",
+                    "background": "#f7fafc",
+                    "on-tertiary-fixed": "#353b53",
+                    "secondary-container": "#e0e2e8",
+                    "primary-container": "#d2e4fb",
+                    "outline": "#4b5563", /* Higher contrast outline */
+                    "error-dim": "#4e0309",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-container-high": "#dfeaef"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "fontFamily": {
+                    "headline": ["Manrope"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .font-headline { font-family: 'Manrope', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Focus ring visibility improvement */
+        :focus-visible {
+            outline: 3px solid #1a202c;
+            outline-offset: 2px;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface antialiased overflow-hidden">
+<!-- SideNavBar Shell -->
+<aside aria-label="Navegación Principal" class="h-screen w-64 fixed left-0 top-0 overflow-y-auto bg-white dark:bg-slate-900 border-r border-slate-200 z-50 flex flex-col py-8 font-['Manrope'] antialiased tracking-tight shadow-sm">
+<div class="px-6 mb-10">
+<h1 class="text-xl font-extrabold tracking-tighter text-slate-900 dark:text-white">Fleet Architect</h1>
+<p class="text-[10px] uppercase tracking-widest text-slate-700 font-bold mt-1">Kinetic Mastery</p>
+</div>
+<nav class="flex-1">
+<div class="space-y-1">
+<a aria-label="Ir a Resumen" class="flex items-center text-slate-700 dark:text-slate-300 py-3 px-6 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors duration-200" href="#">
+<span aria-hidden="true" class="material-symbols-outlined mr-3" data-icon="dashboard">dashboard</span>
+<span class="text-sm font-semibold">Resumen</span>
+</a>
+<a aria-current="page" aria-label="Página actual: Mapa en Vivo" class="relative flex items-center bg-slate-900 text-white py-3 px-6 transition-all" href="#">
+<span aria-hidden="true" class="material-symbols-outlined mr-3" data-icon="map" style="font-variation-settings: 'FILL' 1;">map</span>
+<span class="text-sm font-bold">Mapa en Vivo</span>
+</a>
+<a aria-label="Ir a Consumo de Combustible" class="flex items-center text-slate-700 dark:text-slate-300 py-3 px-6 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors duration-200" href="#">
+<span aria-hidden="true" class="material-symbols-outlined mr-3" data-icon="local_gas_station">local_gas_station</span>
+<span class="text-sm font-semibold">Combustible</span>
+</a>
+<a aria-label="Ir a Mantenimiento" class="flex items-center text-slate-700 dark:text-slate-300 py-3 px-6 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors duration-200" href="#">
+<span aria-hidden="true" class="material-symbols-outlined mr-3" data-icon="build">build</span>
+<span class="text-sm font-semibold">Mantenimiento</span>
+</a>
+<a aria-label="Ir a Reportes" class="flex items-center text-slate-700 dark:text-slate-300 py-3 px-6 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors duration-200" href="#">
+<span aria-hidden="true" class="material-symbols-outlined mr-3" data-icon="assessment">assessment</span>
+<span class="text-sm font-semibold">Reportes</span>
+</a>
+<a aria-label="Ir a Alertas" class="flex items-center text-slate-700 dark:text-slate-300 py-3 px-6 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors duration-200" href="#">
+<span aria-hidden="true" class="material-symbols-outlined mr-3" data-icon="notifications_active">notifications_active</span>
+<span class="text-sm font-semibold">Alertas</span>
+</a>
+</div>
+</nav>
+<div class="mt-auto px-6 space-y-4">
+<div class="flex items-center space-x-3 mb-6 p-3 bg-slate-100 rounded-lg border border-slate-200">
+<img alt="Perfil de Admin User, Director de Flota" class="w-10 h-10 rounded-full object-cover border border-slate-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBOFb0fY4amSPdeq84yFZq1i80CLRRjlxFaMeM6cMXZ-lqU95rPKUTM9PbKC9fuEyiE82gqG8X5oM061jiNrh4xl1BoLx-WvkGT00ilTqiHTkuqDb15ANlBu_2ak508ljHCnEaf2Gtk04DufCHKcc5gIQZLkb_pWLcEvrtMRXsNUqi9ePR6dgQysmqX_fkmqut7W3svFAGWiYLamllPQI4y32rDlyuFT3Yctshrqmm0CfOfXh7-Je3NbVl04_SvJXDaF-CHn_TBrMw"/>
+<div>
+<p class="text-xs font-bold text-slate-900">Admin User</p>
+<p class="text-[10px] text-slate-600 font-medium">Fleet Director</p>
+</div>
+</div>
+<a aria-label="Abrir Configuración" class="flex items-center text-slate-700 py-2 hover:text-slate-900 font-semibold transition-all" href="#">
+<span aria-hidden="true" class="material-symbols-outlined mr-3" data-icon="settings">settings</span>
+<span class="text-sm">Configuración</span>
+</a>
+<a aria-label="Obtener Ayuda" class="flex items-center text-slate-700 py-2 hover:text-slate-900 font-semibold transition-all" href="#">
+<span aria-hidden="true" class="material-symbols-outlined mr-3" data-icon="help_outline">help_outline</span>
+<span class="text-sm">Ayuda</span>
+</a>
+</div>
+</aside>
+<!-- TopAppBar Shell -->
+<header class="fixed top-0 right-0 w-[calc(100%-16rem)] z-40 bg-white dark:bg-slate-950 border-b border-slate-200 flex justify-between items-center px-10 h-20 ml-64 font-['Inter']">
+<div class="flex items-center bg-slate-100 border-2 border-slate-300 px-4 py-2.5 rounded-full w-96 focus-within:border-slate-900 transition-colors">
+<span aria-hidden="true" class="material-symbols-outlined text-slate-700 mr-2" data-icon="search">search</span>
+<label class="sr-only" for="global-search">Buscar vehículo o ruta</label>
+<input class="bg-transparent border-none focus:ring-0 text-sm w-full placeholder:text-slate-600 font-medium text-slate-900" id="global-search" placeholder="Buscar vehículo o ruta..." type="text"/>
+</div>
+<div class="flex items-center space-x-6">
+<div class="flex items-center space-x-4">
+<button aria-label="Notificaciones" class="text-slate-700 hover:text-slate-900 p-2 rounded-lg transition-all">
+<span aria-hidden="true" class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button aria-label="Aplicaciones" class="text-slate-700 hover:text-slate-900 p-2 rounded-lg transition-all">
+<span aria-hidden="true" class="material-symbols-outlined" data-icon="apps">apps</span>
+</button>
+</div>
+<button class="bg-slate-900 text-white px-8 py-3 rounded-md font-bold text-sm tracking-tight border-2 border-slate-900 hover:bg-slate-800 transition-all shadow-md active:scale-95">
+                Generar Reporte
+            </button>
+</div>
+</header>
+<!-- Main Map Canvas -->
+<main class="ml-64 pt-20 h-screen relative bg-surface">
+<!-- Map Placeholder with data-location -->
+<div aria-hidden="true" class="absolute inset-0 z-0 bg-[#cbd5e1]">
+<div class="w-full h-full grayscale-[0.2] contrast-100" data-alt="minimalist topographical map showing high contrast routes" data-location="Mexico City" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDDUna1lOv1xRrC-ZdM8XLuzpd9NSJVmaqw6QH3b-V3o94lX01td8cGPuV0mmpFmO3v9a1QLzKx2tKa-UMXU_LBKiZ1KwcDQWM-81fPNFJe5ydeX0834J4JvVVkoYgsfYDMIBYle8Bym_tw-C9oNo3JYQPng2acgK27WrzeYzv5z-9rY6diFpDEPGb_xZb9Pc23Oi8E1iw9A2n0XnjmT0E1bURpbH4Qb03DDO41Xg6RffjIHoMv5Irg0e298r1mkcDhwmV-mGJyMcY'); background-size: cover; background-position: center;"></div>
+<!-- Map Markers -->
+<div class="absolute top-[40%] left-[35%] w-6 h-6 bg-slate-900 border-4 border-white rounded-full shadow-xl"></div>
+<div class="absolute top-[55%] left-[60%] w-6 h-6 bg-emerald-700 border-4 border-white rounded-full shadow-xl"></div>
+<div class="absolute top-[30%] left-[75%] w-6 h-6 bg-red-700 border-4 border-white rounded-full shadow-xl"></div>
+<div class="absolute top-[20%] left-[20%] w-6 h-6 bg-slate-900 border-4 border-white rounded-full shadow-xl"></div>
+</div>
+<!-- Left Floating Sidebar: Vehicle List -->
+<section aria-label="Lista de Vehículos" class="absolute left-6 top-6 bottom-6 w-80 bg-white/95 backdrop-blur-md rounded-xl z-10 shadow-[0_20px_50px_rgba(0,0,0,0.2)] overflow-hidden flex flex-col border-2 border-slate-200">
+<div class="p-6 pb-4 bg-white border-b border-slate-100">
+<div class="flex justify-between items-end mb-4">
+<h2 class="font-headline text-xl font-black tracking-tight text-slate-900">Flota Activa</h2>
+<span class="text-[10px] font-black text-slate-700 uppercase tracking-widest">24 En Línea</span>
+</div>
+<div aria-label="Filtrar flota" class="flex space-x-2" role="group">
+<button aria-pressed="true" class="flex-1 bg-slate-900 text-white text-[11px] font-black py-2 rounded uppercase border-2 border-slate-900">Todos</button>
+<button aria-pressed="false" class="flex-1 bg-slate-100 text-slate-800 text-[11px] font-black py-2 rounded uppercase border-2 border-slate-300 hover:border-slate-900">Movimiento</button>
+<button aria-pressed="false" class="flex-1 bg-slate-100 text-slate-800 text-[11px] font-black py-2 rounded uppercase border-2 border-slate-300 hover:border-slate-900">Alertas</button>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto px-4 py-3 space-y-3">
+<!-- Vehicle Card Active -->
+<article class="p-4 bg-slate-100 rounded-lg border-2 border-slate-900 transition-all cursor-pointer ring-offset-2 focus:ring-2 focus:ring-slate-900" tabindex="0">
+<div class="flex justify-between items-start mb-2">
+<h3 class="text-xs font-black text-slate-900">TK-8829 | Volvo FH16</h3>
+<div aria-label="Estado: En Movimiento" class="flex items-center bg-slate-900 text-white text-[9px] font-black px-2 py-0.5 rounded">
+<span aria-hidden="true" class="material-symbols-outlined text-[12px] mr-1" data-icon="moving">moving</span>
+<span>MOVIMIENTO</span>
+</div>
+</div>
+<div class="flex items-center text-xs text-slate-800 font-semibold mb-1">
+<span aria-hidden="true" class="material-symbols-outlined text-sm mr-1" data-icon="person">person</span>
+<span>Conductor: Ricardo Morales</span>
+</div>
+<div class="flex items-center text-[10px] text-slate-700 font-bold">
+<span aria-hidden="true" class="material-symbols-outlined text-sm mr-1" data-icon="speed">speed</span>
+<span>78 km/h • A 12.4 km del destino</span>
+</div>
+</article>
+<!-- Vehicle Card Alert -->
+<article class="p-4 bg-white rounded-lg border-2 border-slate-200 hover:border-red-600 transition-all cursor-pointer ring-offset-2 focus:ring-2 focus:ring-red-600" tabindex="0">
+<div class="flex justify-between items-start mb-2">
+<h3 class="text-xs font-black text-slate-900">TK-4102 | Scania R500</h3>
+<div aria-label="Estado: Alerta Crítica" class="flex items-center bg-red-700 text-white text-[9px] font-black px-2 py-0.5 rounded">
+<span aria-hidden="true" class="material-symbols-outlined text-[12px] mr-1" data-icon="report_problem">report_problem</span>
+<span>ALERTA</span>
+</div>
+</div>
+<div class="flex items-center text-xs text-slate-800 font-semibold mb-1">
+<span aria-hidden="true" class="material-symbols-outlined text-sm mr-1" data-icon="person">person</span>
+<span>Conductor: Elena Suarez</span>
+</div>
+<div class="flex items-center text-[10px] text-red-800 font-black">
+<span aria-hidden="true" class="material-symbols-outlined text-sm mr-1" data-icon="warning">warning</span>
+<span>Exceso de temperatura motor</span>
+</div>
+</article>
+<!-- Vehicle Card Idle -->
+<article class="p-4 bg-white rounded-lg border-2 border-slate-200 hover:border-slate-900 transition-all cursor-pointer ring-offset-2 focus:ring-2 focus:ring-slate-900" tabindex="0">
+<div class="flex justify-between items-start mb-2">
+<h3 class="text-xs font-black text-slate-900">TK-9931 | Mercedes Actros</h3>
+<div aria-label="Estado: Detenido" class="flex items-center bg-slate-500 text-white text-[9px] font-black px-2 py-0.5 rounded">
+<span aria-hidden="true" class="material-symbols-outlined text-[12px] mr-1" data-icon="pause_circle">pause_circle</span>
+<span>DETENIDO</span>
+</div>
+</div>
+<div class="flex items-center text-xs text-slate-800 font-semibold mb-1">
+<span aria-hidden="true" class="material-symbols-outlined text-sm mr-1" data-icon="person">person</span>
+<span>Conductor: Jorge Ruiz</span>
+</div>
+<div class="flex items-center text-[10px] text-slate-700 font-bold">
+<span aria-hidden="true" class="material-symbols-outlined text-sm mr-1" data-icon="schedule">schedule</span>
+<span>Detenido hace 45m</span>
+</div>
+</article>
+</div>
+<div class="p-5 bg-slate-900 text-white border-t border-slate-800">
+<div class="grid grid-cols-2 gap-4">
+<div class="text-center">
+<p class="text-[10px] font-black text-slate-300 uppercase tracking-wider">Combustible Prom.</p>
+<p class="text-xl font-headline font-black">84%</p>
+</div>
+<div class="text-center">
+<p class="text-[10px] font-black text-slate-300 uppercase tracking-wider">Eficiencia</p>
+<p class="text-xl font-headline font-black">9.2</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Floating Detail Panel -->
+<section aria-label="Detalles del Vehículo Seleccionado" class="absolute right-6 top-6 w-96 bg-white/95 backdrop-blur-lg rounded-xl z-10 shadow-[0_20px_50px_rgba(0,0,0,0.2)] border-2 border-slate-200 p-6">
+<div class="flex justify-between items-start mb-6">
+<div>
+<h2 class="font-headline text-lg font-black text-slate-900 tracking-tight">TK-8829 Detalles</h2>
+<p class="text-[10px] font-black text-slate-700 uppercase tracking-widest">En ruta: CDMX → Queretaro</p>
+</div>
+<button aria-label="Cerrar detalles" class="text-slate-500 hover:text-slate-900 p-2 rounded-lg transition-all">
+<span aria-hidden="true" class="material-symbols-outlined font-bold" data-icon="close">close</span>
+</button>
+</div>
+<div class="grid grid-cols-2 gap-4 mb-8">
+<div class="bg-slate-100 border-2 border-slate-200 p-4 rounded-lg">
+<span class="text-[10px] font-black text-slate-700 uppercase tracking-widest block mb-1">Velocidad</span>
+<div class="flex items-baseline space-x-1">
+<span class="text-3xl font-headline font-black text-slate-900">78</span>
+<span class="text-xs font-bold text-slate-700">km/h</span>
+</div>
+</div>
+<div class="bg-slate-100 border-2 border-slate-200 p-4 rounded-lg">
+<span class="text-[10px] font-black text-slate-700 uppercase tracking-widest block mb-1">Odómetro</span>
+<div class="flex items-baseline space-x-1">
+<span class="text-3xl font-headline font-black text-slate-900">42.1</span>
+<span class="text-xs font-bold text-slate-700">k</span>
+</div>
+</div>
+</div>
+<div class="space-y-5">
+<div>
+<div class="flex justify-between items-center mb-2">
+<span class="text-[10px] font-black text-slate-900 uppercase tracking-widest">Progreso de Ruta</span>
+<span class="text-xs font-black text-slate-900">68%</span>
+</div>
+<div aria-label="68 por ciento completado" class="w-full bg-slate-200 h-3 rounded-full overflow-hidden border border-slate-300">
+<div class="bg-slate-900 h-full w-[68%] rounded-full"></div>
+</div>
+</div>
+<div class="flex items-center justify-between p-4 bg-slate-50 rounded-lg border-2 border-slate-200">
+<div class="flex items-center">
+<div class="w-10 h-10 rounded-full bg-slate-900 flex items-center justify-center mr-3">
+<span aria-hidden="true" class="material-symbols-outlined text-white text-xl" data-icon="route">route</span>
+</div>
+<div>
+<p class="text-[10px] font-black text-slate-700 uppercase tracking-widest">Prox. Parada</p>
+<p class="text-xs font-bold text-slate-900">Base Logistic A-2</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-xs font-black text-slate-900">12:45 PM</p>
+<p class="text-[10px] font-bold text-slate-600">ETA</p>
+</div>
+</div>
+</div>
+<div class="mt-8 flex space-x-3">
+<button class="flex-1 bg-slate-900 text-white py-3.5 rounded-md text-xs font-black uppercase tracking-widest flex items-center justify-center hover:bg-slate-800 transition-all shadow-md active:scale-95">
+<span aria-hidden="true" class="material-symbols-outlined text-base mr-2" data-icon="videocam">videocam</span> Ver Cámara
+                </button>
+<button aria-label="Chat con conductor" class="bg-slate-100 text-slate-900 border-2 border-slate-200 p-3.5 rounded-md hover:bg-slate-200 hover:border-slate-400 transition-all">
+<span aria-hidden="true" class="material-symbols-outlined text-base" data-icon="chat">chat</span>
+</button>
+<button aria-label="Más opciones" class="bg-slate-100 text-slate-900 border-2 border-slate-200 p-3.5 rounded-md hover:bg-slate-200 hover:border-slate-400 transition-all">
+<span aria-hidden="true" class="material-symbols-outlined text-base" data-icon="more_horiz">more_horiz</span>
+</button>
+</div>
+</section>
+<!-- Map Controls Floating -->
+<nav aria-label="Controles de mapa" class="absolute bottom-10 right-10 flex flex-col space-y-4 z-10">
+<div class="bg-white/95 backdrop-blur-md p-2 rounded-xl shadow-2xl border-2 border-slate-200 flex flex-col space-y-2">
+<button aria-label="Aumentar zoom" class="p-3 hover:bg-slate-100 rounded-lg transition-all text-slate-900 border border-transparent hover:border-slate-300">
+<span aria-hidden="true" class="material-symbols-outlined font-black" data-icon="add">add</span>
+</button>
+<div aria-hidden="true" class="h-0.5 bg-slate-200 mx-1"></div>
+<button aria-label="Disminuir zoom" class="p-3 hover:bg-slate-100 rounded-lg transition-all text-slate-900 border border-transparent hover:border-slate-300">
+<span aria-hidden="true" class="material-symbols-outlined font-black" data-icon="remove">remove</span>
+</button>
+</div>
+<button aria-label="Cambiar capas de mapa" class="bg-slate-900 text-white p-5 rounded-full shadow-2xl hover:scale-105 active:scale-95 transition-all border-4 border-white">
+<span aria-hidden="true" class="material-symbols-outlined font-bold" data-icon="layers">layers</span>
+</button>
+</nav>
+<!-- Live Status Bar -->
+<div aria-label="Estado global del sistema" class="absolute bottom-10 left-[350px] px-10 py-4 bg-slate-900 text-white rounded-full z-10 shadow-2xl border-2 border-slate-700 flex items-center space-x-10">
+<div class="flex items-center space-x-3">
+<div class="w-3 h-3 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_10px_rgba(52,211,153,0.8)]"></div>
+<span class="text-[11px] font-black uppercase tracking-widest text-slate-200">Sistema Operativo</span>
+</div>
+<div aria-hidden="true" class="h-6 w-0.5 bg-slate-700"></div>
+<div class="flex space-x-8">
+<div class="flex items-baseline space-x-2">
+<span class="text-lg font-black text-white">148</span>
+<span class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Vehículos</span>
+</div>
+<div class="flex items-baseline space-x-2">
+<span class="text-lg font-black text-emerald-400">132</span>
+<span class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Movimiento</span>
+</div>
+<div class="flex items-baseline space-x-2">
+<span class="text-lg font-black text-red-400">3</span>
+<span class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Críticos</span>
+</div>
+</div>
+</div>
+</main>
+</body></html>

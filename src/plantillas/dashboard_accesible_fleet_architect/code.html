@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Fleet Architect - Dashboard Administrador</title>
+<!-- Fonts & Icons -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Manrope:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        // Adjusting colors for WCAG AAA (Contrast > 7:1 for normal text)
+                        "primary": "#2D3B4A", // Darker primary for better contrast
+                        "primary-dim": "#1E2933",
+                        "on-primary": "#FFFFFF",
+                        "secondary": "#414449",
+                        "surface": "#F8FAFC",
+                        "on-surface": "#1A2024", // Darker text
+                        "outline": "#4B5563", // Darker gray for outlines/labels
+                        "outline-variant": "#374151",
+                        "error": "#B91C1C", // WCAG AAA Red
+                        "error-container": "#FEE2E2",
+                        "warning-text": "#854D0E", // AAA compliant yellow/brown
+                        "info-text": "#1E40AF", // AAA compliant blue
+                        "success-text": "#166534" // AAA compliant green
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "1rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Manrope", "sans-serif"],
+                        "body": ["Inter", "sans-serif"],
+                        "label": ["Inter", "sans-serif"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        body { font-family: 'Inter', sans-serif; font-size: 16px; }
+        h1, h2, h3 { font-family: 'Manrope', sans-serif; }
+        
+        /* Focus states for accessibility */
+        :focus-visible {
+            outline: 3px solid #2D3B4A !important;
+            outline-offset: 2px;
+        }
+        
+        /* High contrast for small text */
+        .text-xs { font-size: 0.875rem; line-height: 1.25rem; }
+        .text-\[10px\] { font-size: 0.8125rem; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface antialiased">
+<!-- SideNavBar -->
+<aside aria-label="Navegación Principal" class="h-screen w-64 fixed left-0 top-0 overflow-y-auto bg-slate-100 dark:bg-slate-900 border-r border-slate-300 flex flex-col py-8 font-['Manrope'] antialiased tracking-tight">
+<div class="px-6 mb-10 flex items-center gap-3">
+<div aria-hidden="true" class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-white" data-icon="rocket_launch">rocket_launch</span>
+</div>
+<div>
+<h1 class="text-xl font-extrabold tracking-tighter text-primary dark:text-white uppercase leading-none">Fleet Architect</h1>
+<p class="text-[10px] uppercase tracking-[0.2em] text-outline mt-1 font-bold">Kinetic Mastery</p>
+</div>
+</div>
+<nav class="flex-1 space-y-1">
+<a aria-current="page" class="relative flex items-center bg-slate-200 dark:bg-slate-800 text-primary dark:text-white before:content-[''] before:absolute before:left-0 before:w-1 before:h-full before:bg-primary py-4 px-6 transition-all duration-200" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="dashboard">dashboard</span>
+<span class="text-sm font-bold">Resumen</span>
+</a>
+<a class="flex items-center text-secondary dark:text-slate-300 py-4 px-6 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="map">map</span>
+<span class="text-sm font-semibold">Mapa en Vivo</span>
+</a>
+<a class="flex items-center text-secondary dark:text-slate-300 py-4 px-6 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="local_gas_station">local_gas_station</span>
+<span class="text-sm font-semibold">Consumo</span>
+</a>
+<a class="flex items-center text-secondary dark:text-slate-300 py-4 px-6 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="build">build</span>
+<span class="text-sm font-semibold">Mantenimiento</span>
+</a>
+<a class="flex items-center text-secondary dark:text-slate-300 py-4 px-6 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="assessment">assessment</span>
+<span class="text-sm font-semibold">Reportes</span>
+</a>
+<a class="flex items-center text-secondary dark:text-slate-300 py-4 px-6 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="notifications_active">notifications_active</span>
+<span class="text-sm font-semibold">Alertas</span>
+</a>
+</nav>
+<div class="mt-auto px-6 space-y-1">
+<a class="flex items-center text-secondary dark:text-slate-300 py-3 hover:bg-slate-200 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="settings">settings</span>
+<span class="text-sm font-semibold">Configuración</span>
+</a>
+<a class="flex items-center text-secondary dark:text-slate-300 py-3 hover:bg-slate-200 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="help_outline">help_outline</span>
+<span class="text-sm font-semibold">Ayuda</span>
+</a>
+<div class="pt-6 border-t border-slate-300 dark:border-slate-800 mt-4 flex items-center gap-3">
+<div class="w-10 h-10 rounded-full overflow-hidden border border-slate-300">
+<img alt="Perfil del Admin Global" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDl9V5BzbziqYZRFPcPRG45_OIHwGTs4UgWkcJlX95Fqg0NjmtaTggYODWYR-lOcboa_pkrKoSY0fgY4ElEJp9_z6VsCN6mp0xezF2Q2FOeW3LJmLcsq4NL4LrW6j3MyhvUVVRJBPbB-9CC4hIICS3tBGoP7XgLDG8VTnSLbNEqlu5qr5XTSa8q2RJx4m3YLKEiKUGZHbSUKxYMaJwCJQC1Ezqh_5qRnViiQNyd6m_DxSwWsPyGZ_K-INbBEdFKPCK5qyFe0fA65MQ"/>
+</div>
+<div class="overflow-hidden">
+<p class="text-sm font-bold text-on-surface truncate">Admin Global</p>
+<p class="text-xs text-outline truncate">admin@logistics.com</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- TopAppBar -->
+<header class="fixed top-0 right-0 w-[calc(100%-16rem)] z-40 bg-surface dark:bg-slate-950 border-b border-slate-200 flex justify-between items-center px-10 h-20 ml-64">
+<div class="flex items-center flex-1 max-w-xl">
+<div class="relative w-full">
+<label class="sr-only" for="main-search">Buscar en la plataforma</label>
+<span aria-hidden="true" class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline" data-icon="search">search</span>
+<input class="w-full bg-slate-200 border-none rounded-xl pl-12 pr-4 py-3 text-base focus:ring-2 focus:ring-primary transition-all placeholder:text-outline" id="main-search" placeholder="Buscar flota, conductor o ruta..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-4">
+<button aria-label="Notificaciones" class="material-symbols-outlined text-outline hover:text-primary transition-colors p-2" data-icon="notifications">notifications</button>
+<button aria-label="Aplicaciones" class="material-symbols-outlined text-outline hover:text-primary transition-colors p-2" data-icon="apps">apps</button>
+</div>
+<button class="bg-primary text-on-primary px-6 py-3 rounded-lg flex items-center gap-2 hover:bg-primary-dim transition-colors font-bold text-sm min-h-[48px]">
+<span aria-hidden="true" class="material-symbols-outlined text-lg" data-icon="description">description</span>
+                Generar Reporte
+            </button>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="ml-64 mt-20 p-10 space-y-10" id="main-content">
+<!-- Header Actions & Title -->
+<div class="flex justify-between items-end">
+<div>
+<span class="text-sm font-bold tracking-[0.15em] text-primary uppercase">Panel de Control</span>
+<h2 class="text-4xl font-extrabold text-on-surface tracking-tight mt-1">Visión General de Flota</h2>
+</div>
+<div class="flex gap-4">
+<button aria-label="Descargar como PDF" class="bg-slate-200 text-on-surface px-5 py-3 rounded-lg flex items-center gap-2 text-sm font-bold border border-slate-300 hover:bg-slate-300 min-h-[48px]">
+<span aria-hidden="true" class="material-symbols-outlined text-lg" data-icon="picture_as_pdf">picture_as_pdf</span>
+                    PDF
+                </button>
+<button aria-label="Descargar como Excel" class="bg-slate-200 text-on-surface px-5 py-3 rounded-lg flex items-center gap-2 text-sm font-bold border border-slate-300 hover:bg-slate-300 min-h-[48px]">
+<span aria-hidden="true" class="material-symbols-outlined text-lg" data-icon="table_chart">table_chart</span>
+                    Excel
+                </button>
+<button class="bg-primary bg-gradient-to-b from-primary to-primary-dim text-on-primary px-6 py-3 rounded-lg text-sm font-bold shadow-md hover:opacity-95 min-h-[48px]">
+                    Generar Reporte Automático
+                </button>
+</div>
+</div>
+<!-- Top Row: KPI Cards -->
+<div aria-label="Indicadores Clave de Desempeño" class="grid grid-cols-1 md:grid-cols-4 gap-6" role="region">
+<!-- KPI 1 -->
+<div aria-label="Unidades Activas: 124, con incremento del 5.2%" class="bg-white p-6 rounded-xl border border-slate-200 flex flex-col justify-between h-40 shadow-sm">
+<div>
+<span class="text-xs font-bold tracking-[0.1em] text-outline uppercase block mb-1">Unidades Activas</span>
+<div class="flex items-center justify-between">
+<span class="text-4xl font-extrabold text-primary">124</span>
+<div aria-label="Tendencia: incremento de 5.2%" class="text-success-text bg-green-100 px-2 py-1 rounded text-xs font-bold border border-green-200">+5.2%</div>
+</div>
+</div>
+<div aria-valuemax="100" aria-valuemin="0" aria-valuenow="80" class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden" role="progressbar">
+<div class="bg-primary w-4/5 h-full"></div>
+</div>
+</div>
+<!-- KPI 2 -->
+<div aria-label="Consumo Promedio: 3.8 Galones por Kilómetro" class="bg-white p-6 rounded-xl border border-slate-200 flex flex-col justify-between h-40 shadow-sm">
+<div>
+<span class="text-xs font-bold tracking-[0.1em] text-outline uppercase block mb-1">Consumo Promedio</span>
+<div class="flex items-center justify-between">
+<span class="text-4xl font-extrabold text-on-surface">3.8</span>
+<span class="text-sm font-bold text-outline">Gal/Km</span>
+</div>
+</div>
+<p class="text-sm font-medium text-outline-variant">-0.4 desde el mes pasado</p>
+</div>
+<!-- KPI 3 -->
+<div aria-label="12 Alertas Críticas Detectadas" class="bg-white p-6 rounded-xl border-2 border-red-100 flex flex-col justify-between h-40 shadow-sm">
+<div>
+<span class="text-xs font-bold tracking-[0.1em] text-error uppercase block mb-1">Alertas Críticas</span>
+<div class="flex items-center justify-between">
+<span class="text-4xl font-extrabold text-error">12</span>
+<span aria-hidden="true" class="material-symbols-outlined text-error text-3xl" data-icon="warning" style="font-variation-settings: 'FILL' 1;">warning</span>
+</div>
+</div>
+<div class="flex gap-2">
+<div class="h-2 w-1/4 bg-error rounded-full"></div>
+<div class="h-2 w-1/4 bg-error-container rounded-full border border-red-200"></div>
+<div class="h-2 w-1/4 bg-error-container rounded-full border border-red-200"></div>
+<div class="h-2 w-1/4 bg-error-container rounded-full border border-red-200"></div>
+</div>
+</div>
+<!-- KPI 4 -->
+<div aria-label="Productividad Semanal: 94%, Estado Óptimo" class="bg-white p-6 rounded-xl border border-slate-200 flex flex-col justify-between h-40 shadow-sm">
+<div>
+<span class="text-xs font-bold tracking-[0.1em] text-outline uppercase block mb-1">Productividad Semanal</span>
+<div class="flex items-center justify-between">
+<span class="text-4xl font-extrabold text-on-surface">94%</span>
+<div class="text-primary bg-slate-200 px-2 py-1 rounded text-xs font-bold border border-slate-300">Óptimo</div>
+</div>
+</div>
+<div aria-hidden="true" class="flex items-end gap-1.5 h-10">
+<div class="w-full bg-primary h-5 rounded-sm"></div>
+<div class="w-full bg-primary h-7 rounded-sm"></div>
+<div class="w-full bg-primary h-10 rounded-sm"></div>
+<div class="w-full bg-primary h-6 rounded-sm"></div>
+<div class="w-full bg-primary h-8 rounded-sm"></div>
+</div>
+</div>
+</div>
+<!-- Middle Section: Interactive Map Container -->
+<section aria-labelledby="map-title" class="relative h-[550px] bg-slate-200 rounded-2xl overflow-hidden shadow-md border border-slate-300">
+<h3 class="sr-only" id="map-title">Mapa Interactivo de Flota</h3>
+<div class="absolute inset-0 grayscale contrast-125 opacity-50">
+<img alt="Mapa base de la Ciudad de México con trazado de calles simplificado" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDbi4XP1Jtn2_b0PH3hgDSXI2O2JyA_m9OdH5M90ZGOXVBkvpW2CnZrDp5YDUYVt8LnZyMLQge-gmHVgspHs6q8SS4OhEDmawwBUPUcd4gdiICJoU4u0f81hU7ZNrwEvxv13D3jD0hmS7Rqig0VuxrzCrQvI0KSd9yFGutxowOj58qAu9zikwwly5YYtLjv5ufXI7t8nAFWxke0V9YYBfcGdD8dedvg_xt_ElsB8wiir4VNbPuCORDkRbl_aeGNAn-PiAtITYJcn6U"/>
+</div>
+<!-- Floating Map UI -->
+<div class="absolute top-6 left-6 right-6 flex justify-between items-start pointer-events-none">
+<div class="bg-white/95 backdrop-blur-md p-6 rounded-xl shadow-xl border border-slate-300 pointer-events-auto max-w-xs">
+<h3 class="text-base font-bold text-on-surface mb-4 flex items-center gap-2">
+<span aria-hidden="true" class="material-symbols-outlined text-primary" data-icon="near_me">near_me</span>
+                        Filtros de Mapa
+                    </h3>
+<div class="space-y-3">
+<button class="w-full flex justify-between items-center text-sm p-3 bg-slate-100 rounded-lg border border-slate-300 font-bold text-on-surface hover:bg-slate-200 focus:ring-2 focus:ring-primary">
+<span>Rutas Activas</span>
+<span class="bg-primary text-white px-2.5 py-0.5 rounded-full text-xs">42</span>
+</button>
+<button class="w-full flex justify-between items-center text-sm p-3 bg-white rounded-lg border border-slate-300 font-bold text-on-surface hover:bg-slate-100 focus:ring-2 focus:ring-primary">
+<span>Zonas de Riesgo</span>
+<span aria-hidden="true" class="material-symbols-outlined text-lg text-error" data-icon="visibility">visibility</span>
+</button>
+</div>
+</div>
+<div class="bg-white/95 backdrop-blur-md p-2 rounded-xl shadow-xl border border-slate-300 pointer-events-auto flex flex-col gap-1">
+<button aria-label="Acercar mapa" class="p-3 hover:bg-slate-100 rounded-lg transition-colors"><span class="material-symbols-outlined text-primary text-2xl" data-icon="add">add</span></button>
+<button aria-label="Alejar mapa" class="p-3 hover:bg-slate-100 rounded-lg transition-colors border-t border-slate-200"><span class="material-symbols-outlined text-primary text-2xl" data-icon="remove">remove</span></button>
+<button aria-label="Mi ubicación actual" class="p-3 hover:bg-slate-100 rounded-lg transition-colors border-t border-slate-200"><span class="material-symbols-outlined text-primary text-2xl" data-icon="my_location">my_location</span></button>
+</div>
+</div>
+<!-- Vehicle Pin Mockups -->
+<button aria-label="Detalle de Unidad TRK-8902: 45 kilómetros por hora" class="absolute top-1/2 left-1/3 group p-2">
+<div class="relative">
+<div class="w-5 h-5 bg-primary rounded-full border-2 border-white animate-ping absolute inset-0 opacity-50"></div>
+<div class="w-5 h-5 bg-primary rounded-full border-2 border-white relative z-10"></div>
+<div class="absolute -top-14 -left-1/2 -translate-x-1/2 bg-on-surface text-white text-xs font-bold px-3 py-2 rounded-lg shadow-lg whitespace-nowrap opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity duration-300">
+                        TRK-8902 | 45km/h
+                    </div>
+</div>
+</button>
+<div class="absolute bottom-6 right-6 bg-white/95 backdrop-blur-md px-5 py-2.5 rounded-full text-xs font-bold text-primary border border-slate-300 uppercase tracking-widest">
+                Ubicación Central: 19.4326 | -99.1332
+            </div>
+</section>
+<!-- Bottom Section: Charts & Alerts -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<!-- Left Column: Chart -->
+<section aria-labelledby="chart-title" class="lg:col-span-2 bg-white rounded-2xl p-8 border border-slate-200 shadow-sm flex flex-col">
+<div class="flex justify-between items-center mb-10">
+<div>
+<h3 class="text-xl font-extrabold text-on-surface" id="chart-title">Consumo vs. Kilometraje</h3>
+<p class="text-sm text-outline font-semibold mt-1">Comparativa mensual acumulada del trimestre actual</p>
+</div>
+<div aria-hidden="true" class="flex gap-6">
+<div class="flex items-center gap-2">
+<span class="w-4 h-4 rounded-full bg-primary"></span>
+<span class="text-xs font-bold text-outline uppercase tracking-wide">Consumo</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-4 h-4 rounded-full bg-slate-300"></span>
+<span class="text-xs font-bold text-outline uppercase tracking-wide">KM Recorridos</span>
+</div>
+</div>
+</div>
+<!-- Chart Visual -->
+<div aria-label="Gráfico de barras mostrando el consumo de combustible y kilometraje de Enero a Junio. El consumo se mantiene estable mientras que el kilometraje aumenta en Junio." class="relative flex-1 min-h-[350px] flex items-end justify-between px-6 pb-12 border-b border-slate-200" role="img">
+<!-- Grid Lines -->
+<div class="absolute inset-x-0 top-0 h-[1px] bg-slate-100"></div>
+<div class="absolute inset-x-0 top-1/4 h-[1px] bg-slate-100"></div>
+<div class="absolute inset-x-0 top-1/2 h-[1px] bg-slate-100"></div>
+<div class="absolute inset-x-0 top-3/4 h-[1px] bg-slate-100"></div>
+<!-- Month Data Points -->
+<div class="flex flex-col items-center gap-4 z-10 flex-1">
+<div class="w-10 bg-slate-200 rounded-t h-44 relative border-x border-t border-slate-300">
+<div class="absolute top-0 left-1/2 -translate-x-1/2 w-4 h-4 bg-primary rounded-full -mt-2 border-2 border-white shadow-md"></div>
+</div>
+<span class="text-xs font-extrabold text-outline uppercase">Ene</span>
+</div>
+<div class="flex flex-col items-center gap-4 z-10 flex-1">
+<div class="w-10 bg-slate-200 rounded-t h-36 relative border-x border-t border-slate-300">
+<div class="absolute top-0 left-1/2 -translate-x-1/2 w-4 h-4 bg-primary rounded-full -mt-2 border-2 border-white shadow-md"></div>
+</div>
+<span class="text-xs font-extrabold text-outline uppercase">Feb</span>
+</div>
+<div class="flex flex-col items-center gap-4 z-10 flex-1">
+<div class="w-10 bg-slate-200 rounded-t h-56 relative border-x border-t border-slate-300">
+<div class="absolute top-0 left-1/2 -translate-x-1/2 w-4 h-4 bg-primary rounded-full -mt-2 border-2 border-white shadow-md"></div>
+</div>
+<span class="text-xs font-extrabold text-outline uppercase">Mar</span>
+</div>
+<div class="flex flex-col items-center gap-4 z-10 flex-1">
+<div class="w-10 bg-slate-200 rounded-t h-52 relative border-x border-t border-slate-300">
+<div class="absolute top-0 left-1/2 -translate-x-1/2 w-4 h-4 bg-primary rounded-full -mt-2 border-2 border-white shadow-md"></div>
+</div>
+<span class="text-xs font-extrabold text-outline uppercase">Abr</span>
+</div>
+<div class="flex flex-col items-center gap-4 z-10 flex-1">
+<div class="w-10 bg-slate-200 rounded-t h-60 relative border-x border-t border-slate-300">
+<div class="absolute top-0 left-1/2 -translate-x-1/2 w-4 h-4 bg-primary rounded-full -mt-2 border-2 border-white shadow-md"></div>
+</div>
+<span class="text-xs font-extrabold text-outline uppercase">May</span>
+</div>
+<div class="flex flex-col items-center gap-4 z-10 flex-1">
+<div class="w-10 bg-slate-200 rounded-t h-72 relative border-x border-t border-slate-300">
+<div class="absolute top-0 left-1/2 -translate-x-1/2 w-4 h-4 bg-primary rounded-full -mt-2 border-2 border-white shadow-md"></div>
+</div>
+<span class="text-xs font-extrabold text-outline uppercase">Jun</span>
+</div>
+</div>
+</section>
+<!-- Right Column: Recent Alerts -->
+<section aria-labelledby="alerts-title" class="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm flex flex-col h-full">
+<div class="flex justify-between items-center mb-8">
+<h3 class="text-xl font-extrabold text-on-surface" id="alerts-title">Alertas Recientes</h3>
+<button class="text-primary text-sm font-bold uppercase tracking-tight hover:underline focus:ring-2 focus:ring-primary p-1">Ver Todas</button>
+</div>
+<div class="flex-1 overflow-y-auto space-y-5">
+<!-- Critical Alert -->
+<article class="p-5 bg-red-50 rounded-xl border-l-4 border-error flex items-start gap-4 shadow-sm" role="alert">
+<div class="mt-1">
+<span aria-hidden="true" class="material-symbols-outlined text-error text-2xl" data-icon="local_gas_station" style="font-variation-settings: 'FILL' 1;">local_gas_station</span>
+</div>
+<div>
+<p class="text-base font-bold text-error">Desvío de combustible</p>
+<p class="text-sm text-on-surface mt-1 font-medium">Unidad #452 detectó caída de nivel inusual en parada no autorizada.</p>
+<p class="text-xs text-error font-extrabold mt-3 uppercase tracking-wider flex items-center gap-1">
+<span class="material-symbols-outlined text-xs" data-icon="priority_high">priority_high</span>
+                                Prioridad: Crítica
+                            </p>
+</div>
+</article>
+<!-- Warning Alert -->
+<article class="p-5 bg-amber-50 rounded-xl border-l-4 border-warning-text flex items-start gap-4 shadow-sm" role="alert">
+<div class="mt-1">
+<span aria-hidden="true" class="material-symbols-outlined text-warning-text text-2xl" data-icon="build" style="font-variation-settings: 'FILL' 1;">build</span>
+</div>
+<div>
+<p class="text-base font-bold text-warning-text">Mantenimiento próximo</p>
+<p class="text-sm text-on-surface mt-1 font-medium">Unidad #221 alcanzó los 10,000 KM para servicio de motor.</p>
+<p class="text-xs text-warning-text font-extrabold mt-3 uppercase tracking-wider flex items-center gap-1">
+<span class="material-symbols-outlined text-xs" data-icon="warning">warning</span>
+                                Prioridad: Media
+                            </p>
+</div>
+</article>
+<!-- Warning Alert -->
+<article class="p-5 bg-amber-50 rounded-xl border-l-4 border-warning-text flex items-start gap-4 shadow-sm" role="alert">
+<div class="mt-1">
+<span aria-hidden="true" class="material-symbols-outlined text-warning-text text-2xl" data-icon="timer">timer</span>
+</div>
+<div>
+<p class="text-base font-bold text-warning-text">Ralentí excesivo</p>
+<p class="text-sm text-on-surface mt-1 font-medium">Conductor J. Perez lleva 25 min en ralentí en zona de descarga.</p>
+<p class="text-xs text-warning-text font-extrabold mt-3 uppercase tracking-wider flex items-center gap-1">
+<span class="material-symbols-outlined text-xs" data-icon="warning">warning</span>
+                                Prioridad: Baja
+                            </p>
+</div>
+</article>
+<!-- Info Alert -->
+<article class="p-5 bg-blue-50 rounded-xl border-l-4 border-info-text flex items-start gap-4 shadow-sm" role="alert">
+<div class="mt-1">
+<span aria-hidden="true" class="material-symbols-outlined text-info-text text-2xl" data-icon="info">info</span>
+</div>
+<div>
+<p class="text-base font-bold text-info-text">Ruta completada</p>
+<p class="text-sm text-on-surface mt-1 font-medium">Unidad #110 finalizó entrega exitosa en Centro Distribución Norte.</p>
+<p class="text-xs text-info-text font-extrabold mt-3 uppercase tracking-wider flex items-center gap-1">
+<span class="material-symbols-outlined text-xs" data-icon="check_circle">check_circle</span>
+                                Prioridad: Informativa
+                            </p>
+</div>
+</article>
+</div>
+</section>
+</div>
+</main>
+<!-- Contextual FAB -->
+<button aria-label="Agregar nuevo elemento a la flota" class="fixed bottom-10 right-10 w-16 h-16 bg-primary rounded-full shadow-2xl flex items-center justify-center text-on-primary hover:scale-105 active:scale-95 transition-all z-50 focus:ring-4 focus:ring-primary/40">
+<span aria-hidden="true" class="material-symbols-outlined text-4xl" data-icon="add">add</span>
+</button>
+</body></html>

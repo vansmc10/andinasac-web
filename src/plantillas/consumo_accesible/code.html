@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Consumo de Combustible - Fleet Architect</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary-fixed": "#304153",
+                    "error": "#9f403d",
+                    "inverse-surface": "#0b0f10",
+                    "error-container": "#fe8983",
+                    "surface-container": "#e7eff3",
+                    "secondary-fixed-dim": "#d2d4da",
+                    "primary-fixed": "#d2e4fb",
+                    "surface-variant": "#d7e5eb",
+                    "tertiary-fixed-dim": "#c8cdec",
+                    "on-primary-fixed-variant": "#4c5d70",
+                    "surface": "#f7fafc",
+                    "on-background": "#283439",
+                    "on-surface": "#283439",
+                    "outline-variant": "#a7b4ba",
+                    "on-tertiary": "#faf8ff",
+                    "surface-tint": "#4f6073",
+                    "primary": "#4f6073",
+                    "on-primary-container": "#425366",
+                    "on-error": "#fff7f6",
+                    "surface-container-low": "#eff4f7",
+                    "on-error-container": "#752121",
+                    "inverse-primary": "#d5e7fe",
+                    "secondary": "#5c5f64",
+                    "on-secondary-fixed-variant": "#595c61",
+                    "tertiary-dim": "#4c526c",
+                    "on-secondary-fixed": "#3c4044",
+                    "primary-dim": "#435467",
+                    "on-surface-variant": "#546166",
+                    "on-secondary": "#f7f9ff",
+                    "on-primary": "#f5f8ff",
+                    "tertiary-container": "#d6dbfb",
+                    "surface-container-highest": "#d7e5eb",
+                    "secondary-fixed": "#e0e2e8",
+                    "surface-dim": "#ccdde4",
+                    "on-tertiary-container": "#474d67",
+                    "surface-bright": "#f7fafc",
+                    "on-tertiary-fixed-variant": "#515771",
+                    "inverse-on-surface": "#9a9d9f",
+                    "tertiary-fixed": "#d6dbfb",
+                    "tertiary": "#585e78",
+                    "secondary-dim": "#505358",
+                    "primary-fixed-dim": "#c4d6ed",
+                    "on-secondary-container": "#4f5257",
+                    "background": "#f7fafc",
+                    "on-tertiary-fixed": "#353b53",
+                    "secondary-container": "#e0e2e8",
+                    "primary-container": "#d2e4fb",
+                    "outline": "#707d82",
+                    "error-dim": "#4e0309",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-container-high": "#dfeaef"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "fontFamily": {
+                    "headline": [
+                            "Manrope"
+                    ],
+                    "body": [
+                            "Inter"
+                    ],
+                    "label": [
+                            "Inter"
+                    ]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7fafc;
+        }
+        .headline-font {
+            font-family: 'Manrope', sans-serif;
+        }
+        /* Accessibility improvements for focus states */
+        :focus-visible {
+            outline: 3px solid #4f6073;
+            outline-offset: 2px;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface">
+<!-- SideNavBar Component -->
+<aside class="h-screen w-64 fixed left-0 top-0 overflow-y-auto bg-slate-100 dark:bg-slate-900 shadow-none border-none font-['Manrope'] antialiased tracking-tight z-50">
+<div class="flex flex-col h-full py-8">
+<!-- Brand Header -->
+<div class="px-6 mb-10">
+<h1 class="text-xl font-extrabold tracking-tighter text-[#4f6073] dark:text-white">Fleet Architect</h1>
+<p class="text-xs font-medium text-slate-500 uppercase tracking-widest mt-1">Kinetic Mastery</p>
+</div>
+<!-- Navigation Links -->
+<nav class="flex-1 space-y-1">
+<a class="flex items-center text-slate-500 dark:text-slate-400 py-3 px-6 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-3">dashboard</span>
+<span class="text-sm font-semibold">Resumen</span>
+</a>
+<a class="flex items-center text-slate-500 dark:text-slate-400 py-3 px-6 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-3">map</span>
+<span class="text-sm font-semibold">Mapa en Vivo</span>
+</a>
+<a aria-current="page" class="relative flex items-center bg-slate-200 dark:bg-slate-800 text-[#4f6073] dark:text-white before:content-[''] before:absolute before:left-0 before:w-1 before:h-full before:bg-[#4f6073] py-3 px-6 transition-all scale-100 active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined mr-3">local_gas_station</span>
+<span class="text-sm font-semibold">Consumo de Combustible</span>
+</a>
+<a class="flex items-center text-slate-500 dark:text-slate-400 py-3 px-6 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-3">build</span>
+<span class="text-sm font-semibold">Mantenimiento</span>
+</a>
+<a class="flex items-center text-slate-500 dark:text-slate-400 py-3 px-6 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-3">assessment</span>
+<span class="text-sm font-semibold">Reportes</span>
+</a>
+<a class="flex items-center text-slate-500 dark:text-slate-400 py-3 px-6 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-3">notifications_active</span>
+<span class="text-sm font-semibold">Alertas</span>
+</a>
+</nav>
+<!-- Footer Navigation -->
+<div class="mt-auto pt-6 border-t border-slate-200 dark:border-slate-800 mx-6">
+<a class="flex items-center text-slate-500 dark:text-slate-400 py-2 hover:bg-slate-200/50 transition-all" href="#">
+<span class="material-symbols-outlined mr-3">settings</span>
+<span class="text-sm font-semibold">Configuración</span>
+</a>
+<a class="flex items-center text-slate-500 dark:text-slate-400 py-2 hover:bg-slate-200/50 transition-all" href="#">
+<span class="material-symbols-outlined mr-3">help_outline</span>
+<span class="text-sm font-semibold">Ayuda</span>
+</a>
+</div>
+</div>
+</aside>
+<!-- TopAppBar Component -->
+<header class="fixed top-0 right-0 w-[calc(100%-16rem)] z-40 bg-[#f7fafc] dark:bg-slate-950 flex justify-between items-center px-10 h-20 ml-64 border-none">
+<div class="flex items-center gap-6 flex-1">
+<div class="relative w-full max-w-md">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
+<input class="w-full bg-surface-container-low border-none rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-primary/20 transition-all" placeholder="Buscar vehículo o ruta..." type="text"/>
+</div>
+</div>
+<div class="flex items-center space-x-6">
+<div class="flex space-x-4 text-slate-500">
+<button aria-label="Notificaciones" class="material-symbols-outlined hover:text-[#4f6073] transition-all">notifications</button>
+<button aria-label="Aplicaciones" class="material-symbols-outlined hover:text-[#4f6073] transition-all">apps</button>
+</div>
+<button class="bg-primary text-on-primary px-5 py-2 rounded-lg text-sm font-bold shadow-sm hover:opacity-90 transition-opacity">
+                Generar Reporte
+            </button>
+<div class="h-10 w-10 rounded-full bg-surface-container-high overflow-hidden border-2 border-white shadow-sm">
+<img alt="User Profile" data-alt="close-up portrait of a professional man in a clean office environment with soft natural lighting and professional demeanor" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAL-Z4g64Gq5n8RZPfPUGKnpMYi0axp3II33PzIZsJ8XkMuc9-ZUURAlyeqH523Xf02OkAqUTnh4_VAEpeUcD-FnuEvI-qiEnj7L81lbwvFEo12EIi3TQZmLkmtzIeNSmCIrGlk8I_99EJ1-rTeK_hc896k3joxJU2hUGVddVNsm4-hEtBjZDMT-eVAwh3AfSQGfQbD-UEnnR7Q4vpSVMf3h44WICCQA9BrDKF5eNVQTi3evGUUzS-h1Vx6J_tDNl2BHwXeKihDG_M"/>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-64 pt-24 px-10 pb-12 min-h-screen">
+<!-- Header Section: Editorial Hero -->
+<section class="mb-10">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+<div>
+<span class="text-xs font-bold uppercase tracking-[0.15em] text-primary mb-2 block">Métricas de Energía</span>
+<h2 class="text-4xl font-extrabold headline-font text-on-surface tracking-tight">Consumo de Combustible</h2>
+</div>
+<div class="flex items-center gap-4 bg-surface-container-low p-2 rounded-xl">
+<button class="px-4 py-2 text-sm font-bold text-primary bg-surface-container-lowest rounded-lg shadow-sm">Últimos 30 días</button>
+<button class="px-4 py-2 text-sm font-bold text-on-surface hover:text-primary transition-colors">Este Trimestre</button>
+<button class="px-4 py-2 text-sm font-bold text-on-surface hover:text-primary transition-colors">Anual</button>
+</div>
+</div>
+</section>
+<!-- KPI Bento Grid -->
+<section class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+<!-- Metric Card 1 -->
+<div class="bg-surface-container-lowest p-6 rounded-xl border-none shadow-sm flex flex-col justify-between border-l-4 border-error">
+<div>
+<span class="text-[10px] font-bold uppercase tracking-widest text-on-surface">Eficiencia Promedio</span>
+<div class="flex items-baseline mt-2 gap-1">
+<span class="text-3xl font-extrabold headline-font text-on-surface">14.2</span>
+<span class="text-sm font-bold text-on-surface-variant">KM/Gal</span>
+</div>
+</div>
+<div class="mt-4 flex items-center text-xs font-bold text-error bg-error/10 p-2 rounded">
+<span class="material-symbols-outlined text-sm mr-1">trending_down</span>
+                    3.4% vs mes anterior
+                </div>
+</div>
+<!-- Metric Card 2 -->
+<div class="bg-surface-container-lowest p-6 rounded-xl border-none shadow-sm flex flex-col justify-between border-l-4 border-primary">
+<div>
+<span class="text-[10px] font-bold uppercase tracking-widest text-on-surface">Gasto Total</span>
+<div class="flex items-baseline mt-2 gap-1">
+<span class="text-3xl font-extrabold headline-font text-on-surface">$12,840</span>
+<span class="text-sm font-bold text-on-surface-variant">USD</span>
+</div>
+</div>
+<div class="mt-4 flex items-center text-xs font-bold text-primary bg-primary/10 p-2 rounded">
+<span class="material-symbols-outlined text-sm mr-1">trending_up</span>
+                    0.8% incremento proyectado
+                </div>
+</div>
+<!-- Metric Card 3 -->
+<div class="bg-primary p-6 rounded-xl border-none shadow-lg flex flex-col justify-between relative overflow-hidden">
+<div class="relative z-10">
+<span class="text-[10px] font-bold uppercase tracking-widest text-on-primary">Consumo de Flota</span>
+<div class="flex items-baseline mt-2 gap-1">
+<span class="text-3xl font-extrabold headline-font text-on-primary">850.4</span>
+<span class="text-sm font-bold text-on-primary/90">Galones</span>
+</div>
+</div>
+<div class="mt-4 relative z-10 flex items-center text-xs font-bold text-on-primary bg-black/20 p-2 rounded">
+<span class="material-symbols-outlined text-sm mr-1">check_circle</span>
+                    Dentro del presupuesto
+                </div>
+<div class="absolute right-[-10px] bottom-[-10px] opacity-10">
+<span class="material-symbols-outlined text-8xl" style="font-variation-settings: 'FILL' 1;">local_gas_station</span>
+</div>
+</div>
+<!-- Metric Card 4: Anomalies Alert -->
+<div class="bg-[#ba1a1a] p-6 rounded-xl border-none shadow-sm flex flex-col justify-between">
+<div>
+<span class="text-[10px] font-bold uppercase tracking-widest text-white">Desvíos Detectados</span>
+<div class="flex items-baseline mt-2 gap-1">
+<span class="text-3xl font-extrabold headline-font text-white">03</span>
+<span class="text-sm font-bold text-white/90">Alertas</span>
+</div>
+</div>
+<div class="mt-4 flex items-center text-xs font-bold text-white bg-black/20 p-2 rounded">
+<span class="material-symbols-outlined text-sm mr-1">warning</span>
+                    Revisión crítica requerida
+                </div>
+</div>
+</section>
+<!-- Dynamic Visualization Area -->
+<section class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+<!-- Efficiency Chart (High Contrast) -->
+<div class="lg:col-span-2 bg-surface-container-lowest p-8 rounded-xl shadow-sm border border-slate-200">
+<div class="flex justify-between items-center mb-8">
+<h3 class="headline-font font-extrabold text-xl text-on-surface">Eficiencia por Vehículo y Ruta</h3>
+<div class="flex gap-4">
+<div class="flex items-center gap-2">
+<span class="w-4 h-4 rounded-sm bg-[#2c333a] inline-block border border-black"></span>
+<span class="text-xs font-bold uppercase text-on-surface">Consumo Real</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-4 h-4 rounded-sm bg-[#e2e8f0] inline-block border border-slate-400"></span>
+<span class="text-xs font-bold uppercase text-on-surface">Objetivo</span>
+</div>
+</div>
+</div>
+<!-- Simulated Chart Bars with direct labels -->
+<div class="space-y-8">
+<div class="space-y-2">
+<div class="flex justify-between text-sm font-bold">
+<span class="text-on-surface">Volvo FH16 - Ruta Norte</span>
+<span class="text-[#2c333a]">Actual: 18.4 KM/Gal</span>
+</div>
+<div class="w-full h-8 bg-slate-100 rounded border border-slate-300 relative overflow-hidden">
+<div aria-label="85% del objetivo alcanzado" class="h-full bg-[#2c333a] border-r border-black" role="img" style="width: 85%"></div>
+<span class="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-white pointer-events-none">85% del Objetivo</span>
+</div>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between text-sm font-bold">
+<span class="text-on-surface">Scania R450 - Ruta Costa</span>
+<span class="text-[#2c333a]">Actual: 16.1 KM/Gal</span>
+</div>
+<div class="w-full h-8 bg-slate-100 rounded border border-slate-300 relative overflow-hidden">
+<div aria-label="72% del objetivo alcanzado" class="h-full bg-[#2c333a] border-r border-black" role="img" style="width: 72%"></div>
+<span class="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-white pointer-events-none">72% del Objetivo</span>
+</div>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between text-sm font-bold">
+<span class="text-on-surface">MAN TGX - Urbano</span>
+<span class="text-error-dim font-extrabold">Alerta: 11.8 KM/Gal</span>
+</div>
+<div class="w-full h-8 bg-slate-100 rounded border border-slate-300 relative overflow-hidden">
+<div aria-label="45% del objetivo alcanzado - Crítico" class="h-full bg-error border-r border-error-dim" role="img" style="width: 45%"></div>
+<span class="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-white pointer-events-none">45% (Crítico)</span>
+</div>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between text-sm font-bold">
+<span class="text-on-surface">Mercedes Actros - Logística Sur</span>
+<span class="text-[#2c333a]">Actual: 15.5 KM/Gal</span>
+</div>
+<div class="w-full h-8 bg-slate-100 rounded border border-slate-300 relative overflow-hidden">
+<div aria-label="68% del objetivo alcanzado" class="h-full bg-[#2c333a] border-r border-black" role="img" style="width: 68%"></div>
+<span class="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-white pointer-events-none">68% del Objetivo</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Enhanced Critical Alerts Side Panel -->
+<div class="bg-slate-100 p-6 rounded-xl flex flex-col border border-slate-200">
+<h3 class="headline-font font-extrabold text-xl text-on-surface mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-[#ba1a1a]">warning</span>
+                    Alertas Críticas
+                </h3>
+<div class="space-y-4 flex-1">
+<div class="bg-white p-4 rounded-lg flex items-start gap-4 border-l-8 border-[#ba1a1a] shadow-sm">
+<div class="p-2 bg-[#ba1a1a] rounded text-white flex-shrink-0">
+<span aria-hidden="true" class="material-symbols-outlined">trending_down</span>
+</div>
+<div>
+<p class="text-sm font-extrabold text-on-surface uppercase">CRÍTICO: Caída de Eficiencia</p>
+<p class="text-xs font-bold text-on-surface mt-1">Vehículo: MAN TGX</p>
+<p class="text-xs text-on-surface-variant mt-1 leading-relaxed">Detectado desvío de <span class="text-error font-extrabold">25%</span> en eficiencia en Ruta 402.</p>
+</div>
+</div>
+<div class="bg-white p-4 rounded-lg flex items-start gap-4 border-l-8 border-tertiary shadow-sm">
+<div class="p-2 bg-tertiary rounded text-white flex-shrink-0">
+<span aria-hidden="true" class="material-symbols-outlined">location_on</span>
+</div>
+<div>
+<p class="text-sm font-extrabold text-on-surface uppercase">ALERTA: Geocerca Violada</p>
+<p class="text-xs font-bold text-on-surface mt-1">Estación no autorizada</p>
+<p class="text-xs text-on-surface-variant mt-1 leading-relaxed">Carga detectada en Estación "PetroMax" (Fuera del perímetro permitido).</p>
+</div>
+</div>
+<div class="bg-white/80 p-4 rounded-lg flex items-start gap-4 border-l-8 border-outline shadow-sm">
+<div class="p-2 bg-outline rounded text-white flex-shrink-0">
+<span aria-hidden="true" class="material-symbols-outlined">schedule</span>
+</div>
+<div>
+<p class="text-sm font-extrabold text-on-surface uppercase">AVISO: Mantenimiento Preventivo</p>
+<p class="text-xs font-bold text-on-surface mt-1">Sugerencia de servicio</p>
+<p class="text-xs text-on-surface-variant mt-1 leading-relaxed">Filtros de combustible obstruidos detectados por sensor OBD.</p>
+</div>
+</div>
+</div>
+<button class="w-full mt-6 py-3 border-2 border-primary text-sm font-extrabold text-primary rounded-lg hover:bg-primary/10 transition-colors">
+                    Ver Historial de Alertas
+                </button>
+</div>
+</section>
+<!-- Detailed Records Table (High Contrast & Clear Headers) -->
+<section class="bg-surface-container-lowest rounded-xl shadow-md overflow-hidden border border-slate-200">
+<div class="px-8 py-6 border-b border-slate-200 bg-slate-50">
+<h3 class="headline-font font-extrabold text-xl text-on-surface">Cargas de Combustible Recientes</h3>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead class="bg-slate-800 text-[11px] font-extrabold uppercase tracking-widest text-white border-b-2 border-black">
+<tr>
+<th class="px-8 py-5" scope="col">Fecha &amp; Hora</th>
+<th class="px-8 py-5" scope="col">Vehículo</th>
+<th class="px-8 py-5" scope="col">Estación</th>
+<th class="px-8 py-5" scope="col">Cantidad</th>
+<th class="px-8 py-5" scope="col">Costo Total</th>
+<th class="px-8 py-5" scope="col">KM Actual</th>
+<th class="px-8 py-5 text-right" scope="col">Acciones</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-200 text-sm">
+<tr class="hover:bg-slate-100 transition-colors">
+<td class="px-8 py-6">
+<p class="font-extrabold text-on-surface">14 Oct, 2023</p>
+<p class="text-xs text-on-surface-variant font-bold">08:45 AM</p>
+</td>
+<td class="px-8 py-6">
+<div class="flex items-center gap-2">
+<span aria-hidden="true" class="w-3 h-3 rounded-full bg-primary border border-black"></span>
+<span class="font-bold text-on-surface">VOL-882 (Volvo)</span>
+</div>
+</td>
+<td class="px-8 py-6">
+<span class="text-on-surface font-semibold">Shell Express - Central</span>
+</td>
+<td class="px-8 py-6">
+<span class="font-extrabold text-on-surface">45.0 Gal</span>
+</td>
+<td class="px-8 py-6">
+<span class="font-extrabold text-[#2c333a] text-lg">$215.50</span>
+</td>
+<td class="px-8 py-6 font-bold text-on-surface">124,500 km</td>
+<td class="px-8 py-6 text-right">
+<button aria-label="Más opciones" class="material-symbols-outlined text-on-surface hover:text-primary transition-colors p-2 rounded-full">more_vert</button>
+</td>
+</tr>
+<tr class="hover:bg-slate-100 transition-colors">
+<td class="px-8 py-6">
+<p class="font-extrabold text-on-surface">14 Oct, 2023</p>
+<p class="text-xs text-on-surface-variant font-bold">06:20 AM</p>
+</td>
+<td class="px-8 py-6">
+<div class="flex items-center gap-2">
+<span aria-hidden="true" class="w-3 h-3 rounded-full bg-primary border border-black"></span>
+<span class="font-bold text-on-surface">SCA-102 (Scania)</span>
+</div>
+</td>
+<td class="px-8 py-6">
+<span class="text-on-surface font-semibold">BP Transworld</span>
+</td>
+<td class="px-8 py-6">
+<span class="font-extrabold text-on-surface">82.3 Gal</span>
+</td>
+<td class="px-8 py-6">
+<span class="font-extrabold text-[#2c333a] text-lg">$395.00</span>
+</td>
+<td class="px-8 py-6 font-bold text-on-surface">88,240 km</td>
+<td class="px-8 py-6 text-right">
+<button aria-label="Más opciones" class="material-symbols-outlined text-on-surface hover:text-primary transition-colors p-2 rounded-full">more_vert</button>
+</td>
+</tr>
+<tr class="hover:bg-slate-100 transition-colors">
+<td class="px-8 py-6 bg-error/5">
+<p class="font-extrabold text-on-surface">13 Oct, 2023</p>
+<p class="text-xs text-on-surface-variant font-bold">11:15 PM</p>
+</td>
+<td class="px-8 py-6 bg-error/5">
+<div class="flex items-center gap-2">
+<span aria-hidden="true" class="w-3 h-3 rounded-full bg-error border border-black"></span>
+<span class="font-extrabold text-error-dim">MAN-404 (MAN)</span>
+</div>
+</td>
+<td class="px-8 py-6 bg-error/5">
+<span class="text-on-surface font-semibold">PetroMax #12 <span class="text-[10px] bg-error text-white px-1 ml-1 rounded">ALERTA</span></span>
+</td>
+<td class="px-8 py-6 bg-error/5">
+<span class="font-extrabold text-on-surface">32.1 Gal</span>
+</td>
+<td class="px-8 py-6 bg-error/5">
+<span class="font-extrabold text-[#2c333a] text-lg">$152.80</span>
+</td>
+<td class="px-8 py-6 bg-error/5 font-bold text-on-surface">215,900 km</td>
+<td class="px-8 py-6 bg-error/5 text-right">
+<button aria-label="Más opciones" class="material-symbols-outlined text-on-surface hover:text-primary transition-colors p-2 rounded-full">more_vert</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="px-8 py-6 bg-slate-50 border-t border-slate-200 flex justify-between items-center">
+<span class="text-sm text-on-surface font-extrabold">Mostrando 1-10 de 142 registros</span>
+<div class="flex gap-3">
+<button aria-label="Anterior" class="flex items-center gap-1 px-4 py-2 rounded-lg bg-white border-2 border-slate-300 font-bold hover:bg-slate-50 shadow-sm">
+<span class="material-symbols-outlined text-sm">chevron_left</span> Anterior
+                    </button>
+<button aria-label="Siguiente" class="flex items-center gap-1 px-4 py-2 rounded-lg bg-white border-2 border-slate-300 font-bold hover:bg-slate-50 shadow-sm">
+                        Siguiente <span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+</div>
+</div>
+</section>
+</main>
+<!-- Contextual FAB (Only for main fleet tasks) -->
+<button aria-label="Agregar nueva carga de combustible" class="fixed bottom-8 right-8 w-16 h-16 bg-primary text-on-primary rounded-full shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all z-50 border-4 border-white">
+<span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">add</span>
+</button>
+</body></html>

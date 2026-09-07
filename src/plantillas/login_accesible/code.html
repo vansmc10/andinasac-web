@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Login | Fleet Architect</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary": "#5c5f64",
+                        "inverse-on-surface": "#9a9d9f",
+                        "secondary-container": "#e0e2e8",
+                        "on-primary-container": "#425366",
+                        "on-primary": "#f5f8ff",
+                        "on-error-container": "#752121",
+                        "error": "#9f403d",
+                        "primary-dim": "#435467",
+                        "on-primary-fixed-variant": "#4c5d70",
+                        "on-tertiary": "#faf8ff",
+                        "secondary-fixed": "#e0e2e8",
+                        "outline-variant": "#a7b4ba",
+                        "surface-container-low": "#eff4f7",
+                        "on-error": "#fff7f6",
+                        "surface": "#f7fafc",
+                        "on-tertiary-container": "#474d67",
+                        "secondary-fixed-dim": "#d2d4da",
+                        "on-secondary": "#f7f9ff",
+                        "tertiary": "#585e78",
+                        "surface-container-lowest": "#ffffff",
+                        "error-container": "#fe8983",
+                        "on-primary-fixed": "#304153",
+                        "on-secondary-fixed-variant": "#595c61",
+                        "on-surface-variant": "#546166",
+                        "surface-dim": "#ccdde4",
+                        "primary-fixed": "#d2e4fb",
+                        "surface-tint": "#4f6073",
+                        "primary": "#4f6073",
+                        "surface-bright": "#f7fafc",
+                        "outline": "#707d82",
+                        "background": "#f7fafc",
+                        "surface-variant": "#d7e5eb",
+                        "primary-container": "#d2e4fb",
+                        "on-tertiary-fixed": "#353b53",
+                        "secondary-dim": "#505358",
+                        "inverse-surface": "#0b0f10",
+                        "primary-fixed-dim": "#c4d6ed",
+                        "tertiary-container": "#d6dbfb",
+                        "on-surface": "#283439",
+                        "inverse-primary": "#d5e7fe",
+                        "surface-container-highest": "#d7e5eb",
+                        "on-secondary-container": "#4f5257",
+                        "on-background": "#283439",
+                        "error-dim": "#4e0309",
+                        "tertiary-fixed": "#d6dbfb",
+                        "tertiary-dim": "#4c526c",
+                        "on-secondary-fixed": "#3c4044",
+                        "surface-container": "#e7eff3",
+                        "surface-container-high": "#dfeaef",
+                        "tertiary-fixed-dim": "#c8cdec",
+                        "on-tertiary-fixed-variant": "#515771"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Manrope"],
+                        "display": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7fafc;
+        }
+        h1, h2, h3 {
+            font-family: 'Manrope', sans-serif;
+        }
+        .ghost-border {
+            outline: 1px solid rgba(167, 180, 186, 0.15);
+        }
+        .kinetic-gradient {
+            background: linear-gradient(180deg, #4f6073 0%, #435467 100%);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen flex flex-col md:flex-row overflow-hidden">
+<!-- Brand Side (Visual) -->
+<div class="hidden md:flex md:w-1/2 lg:w-3/5 bg-primary relative overflow-hidden items-center justify-center p-12">
+<div class="absolute inset-0 z-0">
+<img class="w-full h-full object-cover" data-alt="High-angle cinematic shot of a modern logistics warehouse with automated systems and clean industrial lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDB_Klgi9HTKJKppRjmocMTEdAJHy1BqEsK9zCyF-D8R1fylvPpFhqJRWj7vkAnlV4XIiBdS3RTQPAHBwINl_ST4UsSHSzMSA2jr2byYU9jtfv90oMgMVXL1omUS-7gSKH47vVZDt_Oq1p975vt85ynMtRVKHviSZfCS7aLFtg9ewUeK4nIGZlRW_BEL7aqQsrwx3gyV-7uJKO6ta38HbLpifzsXd_6Gu_d_br2S_oKNMyZFbE9p1Dqaf5RUDFSUyLU3VsZvxhWJuk"/>
+<!-- Darker scrim for better text legibility -->
+<div class="absolute inset-0 bg-black/70 mix-blend-multiply"></div>
+</div>
+<!-- Architectural Overlay Shapes -->
+<div class="absolute -top-24 -left-24 w-96 h-96 bg-primary-container/10 rounded-full blur-3xl"></div>
+<div class="absolute -bottom-24 -right-24 w-96 h-96 bg-tertiary/10 rounded-full blur-3xl"></div>
+<div class="relative z-10 max-w-lg">
+<div class="mb-8 flex items-center gap-3">
+<div class="w-12 h-12 bg-on-primary flex items-center justify-center rounded-lg shadow-xl">
+<span class="material-symbols-outlined text-primary text-3xl" style="font-variation-settings: 'FILL' 1;">local_shipping</span>
+</div>
+<div>
+<h1 class="text-on-primary text-3xl font-black uppercase tracking-widest leading-none">Fleet Architect</h1>
+<p class="text-primary-fixed-dim text-xs tracking-[0.2em] font-medium mt-1">Kinetic Mastery</p>
+</div>
+</div>
+<h2 class="text-display-lg font-bold text-on-primary leading-tight mb-6 tracking-tight">
+            Refining logistics data into <span class="text-primary-fixed">architectural precision.</span>
+</h2>
+<p class="text-on-primary/90 text-lg font-light leading-relaxed">
+            Experience the next evolution of fleet management. Our platform transforms complex kinetic variables into actionable intelligence.
+        </p>
+<div class="mt-12 grid grid-cols-2 gap-8">
+<div class="bg-black/20 backdrop-blur-md p-6 rounded-xl border border-white/10">
+<div class="text-primary-fixed text-2xl font-bold mb-1">99.8%</div>
+<div class="text-on-primary/80 text-xs font-semibold tracking-wider uppercase">Uptime Reliability</div>
+</div>
+<div class="bg-black/20 backdrop-blur-md p-6 rounded-xl border border-white/10">
+<div class="text-primary-fixed text-2xl font-bold mb-1">14.2k</div>
+<div class="text-on-primary/80 text-xs font-semibold tracking-wider uppercase">Active Assets</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Login Side (Form) -->
+<div class="w-full md:w-1/2 lg:w-2/5 flex flex-col bg-surface overflow-y-auto">
+<div class="flex-grow flex flex-col justify-center px-8 sm:px-16 lg:px-24 py-12">
+<!-- Mobile Brand Identity -->
+<div class="md:hidden flex items-center gap-3 mb-12">
+<div class="w-10 h-10 bg-primary flex items-center justify-center rounded-lg">
+<span class="material-symbols-outlined text-on-primary text-2xl">local_shipping</span>
+</div>
+<h1 class="text-primary text-xl font-black uppercase tracking-widest">Fleet Architect</h1>
+</div>
+<div class="mb-10">
+<h2 class="text-3xl font-bold text-on-surface tracking-tight mb-2">Welcome back</h2>
+<p class="text-on-surface-variant font-medium">Log in to your Fleet Architect console</p>
+</div>
+<form action="#" aria-labelledby="login-heading" class="space-y-6" method="POST" novalidate="">
+<h2 class="sr-only" id="login-heading">Login Form</h2>
+<!-- Email Input -->
+<div class="space-y-2">
+<label class="block text-xs font-bold text-on-surface uppercase tracking-wider" for="email">Corporate Email</label>
+<div class="relative">
+<input aria-required="true" class="w-full h-12 px-4 bg-surface-container-highest text-on-surface border-2 border-transparent rounded-lg focus:ring-0 focus:border-primary placeholder:text-outline transition-all shadow-sm" id="email" name="email" placeholder="name@company.com" required="" type="email"/>
+<span aria-hidden="true" class="material-symbols-outlined absolute right-4 top-3 text-on-surface-variant">mail</span>
+</div>
+</div>
+<!-- Password Input -->
+<div class="space-y-2">
+<div class="flex justify-between items-center">
+<label class="block text-xs font-bold text-on-surface uppercase tracking-wider" for="password">Security Key</label>
+<a class="text-xs font-bold text-primary hover:text-primary-dim transition-colors underline decoration-primary/30 underline-offset-2" href="#">Forgot password?</a>
+</div>
+<div class="relative">
+<input aria-required="true" class="w-full h-12 px-4 bg-surface-container-highest text-on-surface border-2 border-transparent rounded-lg focus:ring-0 focus:border-primary placeholder:text-outline transition-all shadow-sm" id="password" name="password" placeholder="••••••••" required="" type="password"/>
+<span aria-hidden="true" class="material-symbols-outlined absolute right-4 top-3 text-on-surface-variant">lock</span>
+</div>
+</div>
+<!-- Remember Me -->
+<div class="flex items-center">
+<input class="w-5 h-5 rounded border-2 border-outline text-primary focus:ring-primary focus:ring-offset-2 bg-surface-container-highest cursor-pointer" id="remember" name="remember" type="checkbox"/>
+<label class="ml-3 text-sm font-bold text-on-surface cursor-pointer" for="remember">Remember this terminal</label>
+</div>
+<!-- Action Button -->
+<button class="w-full h-14 kinetic-gradient text-on-primary text-lg font-bold rounded-lg shadow-xl shadow-primary/30 hover:shadow-primary/40 focus:outline-none focus:ring-4 focus:ring-primary/40 active:scale-[0.98] transition-all duration-150 flex items-center justify-center gap-2" type="submit">
+                Access Console
+                <span aria-hidden="true" class="material-symbols-outlined text-2xl">login</span>
+</button>
+</form>
+<div class="mt-10">
+<div class="relative">
+<div class="absolute inset-0 flex items-center"><div class="w-full border-t-2 border-surface-container-highest"></div></div>
+<div class="relative flex justify-center text-xs uppercase tracking-widest"><span class="px-4 bg-surface text-on-surface font-bold">Or authenticate with</span></div>
+</div>
+<div class="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+<button class="flex items-center justify-center gap-2 h-12 bg-white border-2 border-surface-container-highest rounded-lg hover:border-outline-variant focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-bold text-sm text-on-surface shadow-sm">
+<img alt="" aria-hidden="true" class="w-5 h-5" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCcqYFGSescuBBcUX89dPF34YVZjkCFPuVoVq5v0yIOskaX2ht2lOZrbItjNwoK5Q-7Q785kBJr5956Ha6RfspGLp0CnOduxWkLxLk3D6rSFj4dY5iU6qu2rls_XVQWI5zQG5rHEKd0xXE8jKkQNTDIal15MBiUgCdTQl_VaolbbEcJsSU9ve6N7tGbVXxMW2v6CX5S0Lf_fFtTvZh7s3Q9lvskz0jmf_utAo7HT9GPPBacBUtNmO3kGVasUkekJ0LftmghEvbpiAY"/>
+                    Google SSO
+                </button>
+<button class="flex items-center justify-center gap-2 h-12 bg-white border-2 border-surface-container-highest rounded-lg hover:border-outline-variant focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-bold text-sm text-on-surface shadow-sm">
+<span aria-hidden="true" class="material-symbols-outlined text-xl text-[#0078D4]" style="font-variation-settings: 'FILL' 1;">cloud</span>
+                    Azure AD
+                </button>
+</div>
+</div>
+<p class="mt-12 text-center text-sm font-semibold text-on-surface">
+            New to the platform? <a class="text-primary hover:underline font-bold" href="#">Request deployment access</a>
+</p>
+</div>
+<!-- Footer (Clean and Architectural) -->
+<footer class="px-8 sm:px-16 lg:px-24 py-8 bg-surface-container-low mt-auto border-t border-surface-container-high">
+<div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+<div class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">
+                © 2024 Fleet Architect. All rights reserved.
+            </div>
+<nav aria-label="Footer Navigation" class="flex gap-6">
+<a class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest hover:text-primary transition-colors underline decoration-transparent hover:decoration-primary/30" href="#">Privacy Policy</a>
+<a class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest hover:text-primary transition-colors underline decoration-transparent hover:decoration-primary/30" href="#">Master Terms</a>
+<a class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest hover:text-primary transition-colors underline decoration-transparent hover:decoration-primary/30" href="#">Support</a>
+</nav>
+</div>
+</footer>
+</div>
+</body></html>
