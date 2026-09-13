@@ -1,160 +1,249 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useForm, useField } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { z } from 'zod'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../store/authStore.js'
 
-const router    = useRouter()
-const route     = useRoute()
+const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
+
+// ═════════════════════════════════════════════
+// ROL SELECCIONADO
+// ═════════════════════════════════════════════
+
+const selectedRole = computed(() => {
+  const role = route.query.role
+
+  if (
+    role === 'admin' ||
+    role === 'conductor' ||
+    role === 'controlador_rutas'
+  ) {
+    return role
+  }
+
+  return 'admin'
+})
+
+// ═════════════════════════════════════════════
+// INFORMACIÓN DEL ROL
+// ═════════════════════════════════════════════
+
+const roleInfo = computed(() => {
+  switch (selectedRole.value) {
+    case 'conductor':
+      return {
+        label: 'Chofer',
+        title: 'Acceso del chofer',
+        description:
+          'Ingresa para gestionar tu vehículo, ruta y servicio.',
+        icon: 'local_shipping',
+        color: '#0891b2',
+        email: 'chofer@andina.com',
+        password: 'chofer123',
+      }
+
+    case 'controlador_rutas':
+      return {
+        label: 'Controlador de rutas',
+        title: 'Acceso del controlador',
+        description:
+          'Ingresa para supervisar rutas, unidades e incidencias.',
+        icon: 'map',
+        color: '#059669',
+        email: 'controlador@andina.com',
+        password: 'control123',
+      }
+
+    case 'admin':
+    default:
+      return {
+        label: 'Administrador',
+        title: 'Acceso del administrador',
+        description:
+          'Ingresa para administrar la plataforma de flota.',
+        icon: 'admin_panel_settings',
+        color: '#4f6073',
+        email: 'admin@andina.com',
+        password: 'andina123',
+      }
+  }
+})
+
+// ═════════════════════════════════════════════
+// VALIDACIÓN
+// ═════════════════════════════════════════════
 
 const loginSchema = toTypedSchema(
   z.object({
-    email:    z.string().min(1, 'El correo es requerido').email('Ingresa un correo corporativo válido'),
-    password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
+    email: z
+      .string()
+      .min(1, 'El correo es requerido')
+      .email('Ingresa un correo válido'),
+
+    password: z
+      .string()
+      .min(6, 'La contraseña debe tener al menos 6 caracteres'),
+
     remember: z.boolean().optional(),
   })
 )
 
-const { handleSubmit, isSubmitting } = useForm({ validationSchema: loginSchema })
+const {
+  handleSubmit,
+  isSubmitting,
+} = useForm({
+  validationSchema: loginSchema,
+})
 
-const { value: email,    errorMessage: emailError    } = useField('email')
-const { value: password, errorMessage: passwordError } = useField('password')
-const { value: remember                              } = useField('remember')
+const {
+  value: email,
+  errorMessage: emailError,
+} = useField('email')
 
-const showPassword     = ref(false)
-const serverError      = ref('')
-const socialLoading    = ref('')  // 'google' | 'azure' | ''
+const {
+  value: password,
+  errorMessage: passwordError,
+} = useField('password')
 
-// ── Redirigir tras login ──────────────────────────────────
-async function afterLogin() {
-  const redirect = route.query.redirect
-  await router.push(redirect && redirect !== '/' ? redirect : { name: 'dashboard' })
+const {
+  value: remember,
+} = useField('remember')
+
+const showPassword = ref(false)
+const serverError = ref('')
+const socialLoading = ref('')
+
+// ═════════════════════════════════════════════
+// VOLVER A SELECCIÓN DE ROL
+// ═════════════════════════════════════════════
+
+function volverSeleccionRol() {
+  router.push({
+    name: 'role-selection',
+  })
 }
 
-// ── Login email/password ──────────────────────────────────
+// ═════════════════════════════════════════════
+// DASHBOARD SEGÚN ROL
+// ═════════════════════════════════════════════
+
+async function irAlDashboard() {
+  const role = authStore.user?.role
+
+  switch (role) {
+    case 'admin':
+      await router.push({
+        name: 'dashboard',
+      })
+      break
+
+    case 'conductor':
+      await router.push({
+        name: 'dashboard-conductor',
+      })
+      break
+
+    case 'controlador_rutas':
+      await router.push({
+        name: 'dashboard-controlador',
+      })
+      break
+
+    default:
+      await router.push({
+        name: 'role-selection',
+      })
+  }
+}
+
+// ═════════════════════════════════════════════
+// LOGIN CON CORREO
+// ═════════════════════════════════════════════
+
 const onSubmit = handleSubmit(async (values) => {
   serverError.value = ''
+
   try {
-    await authStore.login(values)
-    await afterLogin()
-  } catch (err) {
-    serverError.value = err.response?.data?.message || 'Credenciales inválidas. Intenta nuevamente.'
+    await authStore.login({
+      email: values.email,
+      password: values.password,
+      remember: values.remember,
+      role: selectedRole.value,
+    })
+
+    await irAlDashboard()
+
+  } catch (error) {
+    console.error('Error de inicio de sesión:', error)
+
+    serverError.value =
+      error?.message ||
+      error?.response?.data?.message ||
+      'Las credenciales no son válidas para este rol.'
   }
 })
 
-// ── Login con Google (Google Identity Services) ───────────
+// ═════════════════════════════════════════════
+// GOOGLE - DEMOSTRACIÓN
+// ═════════════════════════════════════════════
+
 async function loginWithGoogle() {
   serverError.value = ''
   socialLoading.value = 'google'
 
   try {
-    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
-
-    // Demo mode: si no hay client_id configurado
-    if (!clientId || clientId === 'TU_GOOGLE_CLIENT_ID') {
-      await authStore.loginWithProvider({
-        name:     'Usuario Google (Demo)',
-        email:    'demo.google@andina.com',
-        avatar:   null,
-        provider: 'google',
-      })
-      await afterLogin()
-      return
-    }
-
-    // Real: Google Identity Services
-    if (!window.google?.accounts?.oauth2) {
-      throw new Error('Google Identity Services no está cargado.')
-    }
-
-    await new Promise((resolve, reject) => {
-      const client = window.google.accounts.oauth2.initTokenClient({
-        client_id: clientId,
-        scope: 'openid email profile',
-        callback: async (response) => {
-          if (response.error) { reject(new Error(response.error)); return }
-          try {
-            const res     = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-              headers: { Authorization: `Bearer ${response.access_token}` },
-            })
-            const profile = await res.json()
-            await authStore.loginWithProvider({
-              name:     profile.name,
-              email:    profile.email,
-              avatar:   profile.picture,
-              provider: 'google',
-              token:    response.access_token,
-            })
-            resolve()
-          } catch (e) { reject(e) }
-        },
-      })
-      client.requestAccessToken()
+    await authStore.loginWithProvider({
+      name: `Usuario Google - ${roleInfo.value.label}`,
+      email: `google.${selectedRole.value}@andina.com`,
+      avatar: null,
+      provider: 'google',
+      role: selectedRole.value,
     })
 
-    await afterLogin()
-  } catch (err) {
-    serverError.value = err.message || 'Error al iniciar sesión con Google.'
+    await irAlDashboard()
+
+  } catch (error) {
+    console.error(error)
+
+    serverError.value =
+      error?.message ||
+      'No se pudo iniciar sesión con Google.'
+
   } finally {
     socialLoading.value = ''
   }
 }
 
-// ── Login con Azure AD (MSAL) ─────────────────────────────
+// ═════════════════════════════════════════════
+// MICROSOFT - DEMOSTRACIÓN
+// ═════════════════════════════════════════════
+
 async function loginWithAzure() {
   serverError.value = ''
   socialLoading.value = 'azure'
 
   try {
-    const clientId = import.meta.env.VITE_AZURE_CLIENT_ID
-    const tenantId = import.meta.env.VITE_AZURE_TENANT_ID
-
-    // Demo mode: si no hay client_id configurado
-    if (!clientId || clientId === 'TU_AZURE_CLIENT_ID') {
-      await authStore.loginWithProvider({
-        name:     'Usuario Azure (Demo)',
-        email:    'demo.azure@andina.com',
-        avatar:   null,
-        provider: 'azure',
-      })
-      await afterLogin()
-      return
-    }
-
-    // Real: MSAL Browser
-    const { PublicClientApplication } = await import('@azure/msal-browser')
-
-    const msalInstance = new PublicClientApplication({
-      auth: {
-        clientId,
-        authority: `https://login.microsoftonline.com/${tenantId || 'common'}`,
-        redirectUri: window.location.origin,
-      },
-      cache: { cacheLocation: 'sessionStorage' },
-    })
-
-    await msalInstance.initialize()
-
-    const response = await msalInstance.loginPopup({
-      scopes: ['openid', 'email', 'profile', 'User.Read'],
-    })
-
     await authStore.loginWithProvider({
-      name:     response.account.name,
-      email:    response.account.username,
-      avatar:   null,
+      name: `Usuario Microsoft - ${roleInfo.value.label}`,
+      email: `microsoft.${selectedRole.value}@andina.com`,
+      avatar: null,
       provider: 'azure',
-      token:    response.accessToken,
+      role: selectedRole.value,
     })
 
-    await afterLogin()
-  } catch (err) {
-    if (err.errorCode !== 'user_cancelled') {
-      serverError.value = err.message || 'Error al iniciar sesión con Azure AD.'
-    }
+    await irAlDashboard()
+
+  } catch (error) {
+    console.error(error)
+
+    serverError.value =
+      error?.message ||
+      'No se pudo iniciar sesión con Microsoft.'
+
   } finally {
     socialLoading.value = ''
   }
@@ -162,278 +251,625 @@ async function loginWithAzure() {
 </script>
 
 <template>
-  <div class="bg-surface text-on-surface min-h-screen flex flex-col md:flex-row overflow-hidden">
+  <div
+    class="min-h-screen flex flex-col md:flex-row overflow-hidden bg-slate-100"
+  >
 
-    <!-- ===== Brand Side (Visual) ===== -->
+    <!-- ═══════════════════════════════════════ -->
+    <!-- PANEL IZQUIERDO -->
+    <!-- ═══════════════════════════════════════ -->
+
     <div
-      class="hidden md:flex md:w-1/2 lg:w-3/5 relative overflow-hidden items-center justify-center p-12"
+      class="hidden md:flex md:w-1/2 lg:w-3/5 relative items-center justify-center p-12 overflow-hidden"
       style="background:linear-gradient(135deg,#2d3d4e 0%,#1a2530 100%)"
-      aria-hidden="true"
     >
-      <!-- Grid decorativo -->
-      <div class="absolute inset-0 opacity-10"
-        style="background-image:repeating-linear-gradient(0deg,transparent,transparent 40px,rgba(255,255,255,0.5) 40px,rgba(255,255,255,0.5) 41px),repeating-linear-gradient(90deg,transparent,transparent 40px,rgba(255,255,255,0.5) 40px,rgba(255,255,255,0.5) 41px)">
-      </div>
-      <!-- Blobs ambient -->
-      <div class="absolute -top-32 -left-32 w-96 h-96 rounded-full blur-3xl opacity-20" style="background:#4f6073"></div>
-      <div class="absolute -bottom-32 -right-32 w-96 h-96 rounded-full blur-3xl opacity-15" style="background:#0891b2"></div>
 
-      <!-- Content -->
-      <div class="relative z-10 max-w-lg">
-        <!-- Brand -->
-        <div class="mb-10 flex items-center gap-4">
-          <div class="w-14 h-14 rounded-2xl flex items-center justify-center shadow-xl" style="background:rgba(255,255,255,0.15);backdrop-filter:blur(8px)">
-            <span class="material-symbols-outlined text-white text-3xl" style="font-variation-settings:'FILL' 1">local_shipping</span>
+      <!-- Fondo -->
+
+      <div
+        class="absolute inset-0 opacity-10"
+        style="
+          background-image:
+          repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 40px,
+            rgba(255,255,255,0.5) 40px,
+            rgba(255,255,255,0.5) 41px
+          ),
+          repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 40px,
+            rgba(255,255,255,0.5) 40px,
+            rgba(255,255,255,0.5) 41px
+          );
+        "
+      ></div>
+
+      <div
+        class="absolute -top-32 -left-32 w-96 h-96 rounded-full blur-3xl opacity-20"
+        style="background:#4f6073"
+      ></div>
+
+      <div
+        class="absolute -bottom-32 -right-32 w-96 h-96 rounded-full blur-3xl opacity-15"
+        style="background:#0891b2"
+      ></div>
+
+      <!-- Contenido -->
+
+      <div class="relative z-10 max-w-lg w-full">
+
+        <!-- Marca -->
+
+        <div class="flex items-center gap-4 mb-10">
+
+          <div
+            class="w-14 h-14 rounded-2xl flex items-center justify-center"
+            style="background:rgba(255,255,255,0.15)"
+          >
+            <span
+              class="material-symbols-outlined text-white text-3xl"
+            >
+              local_shipping
+            </span>
           </div>
+
           <div>
-            <p class="text-white/50 text-[10px] font-black uppercase tracking-widest mb-0.5">Plataforma Empresarial</p>
-            <h1 class="text-white text-2xl font-black uppercase tracking-widest leading-none font-headline">Andina Logística</h1>
+            <p
+              class="text-white/50 text-[10px] font-black uppercase tracking-widest"
+            >
+              Plataforma Empresarial
+            </p>
+
+            <h1
+              class="text-white text-2xl font-black uppercase tracking-widest"
+            >
+              Andina Logística
+            </h1>
           </div>
+
         </div>
 
-        <h2 class="font-black text-white leading-tight mb-5 tracking-tight text-4xl font-headline">
-          Gestión inteligente<br>
-          <span style="color:#7dd3fc">de tu flota.</span>
+        <!-- Título -->
+
+        <h2
+          class="font-black text-white leading-tight mb-5 tracking-tight text-4xl"
+        >
+          Gestión inteligente
+          <br>
+
+          <span style="color:#7dd3fc">
+            de tu flota.
+          </span>
         </h2>
 
-        <p class="text-white/70 text-base font-medium leading-relaxed mb-10">
-          Monitorea en tiempo real, anticipa mantenimientos y optimiza rutas desde una sola plataforma.
+        <p
+          class="text-white/70 text-base font-medium leading-relaxed mb-10"
+        >
+          Monitorea en tiempo real, anticipa mantenimientos y
+          optimiza rutas desde una sola plataforma.
         </p>
 
-        <!-- Stats grid -->
+        <!-- Estadísticas -->
+
         <div class="grid grid-cols-2 gap-4">
-          <div class="rounded-2xl p-5 border" style="background:rgba(255,255,255,0.07);border-color:rgba(255,255,255,0.12)">
-            <p class="text-2xl font-black text-white mb-0.5">124</p>
-            <p class="text-white/60 text-xs font-bold uppercase tracking-widest">Unidades activas</p>
+
+          <div
+            class="rounded-2xl p-5 border"
+            style="
+              background:rgba(255,255,255,0.07);
+              border-color:rgba(255,255,255,0.12)
+            "
+          >
+            <p class="text-2xl font-black text-white">
+              124
+            </p>
+
+            <p
+              class="text-white/60 text-xs font-bold uppercase tracking-widest"
+            >
+              Unidades activas
+            </p>
           </div>
-          <div class="rounded-2xl p-5 border" style="background:rgba(255,255,255,0.07);border-color:rgba(255,255,255,0.12)">
-            <p class="text-2xl font-black text-white mb-0.5">99.8%</p>
-            <p class="text-white/60 text-xs font-bold uppercase tracking-widest">Disponibilidad</p>
+
+          <div
+            class="rounded-2xl p-5 border"
+            style="
+              background:rgba(255,255,255,0.07);
+              border-color:rgba(255,255,255,0.12)
+            "
+          >
+            <p class="text-2xl font-black text-white">
+              99.8%
+            </p>
+
+            <p
+              class="text-white/60 text-xs font-bold uppercase tracking-widest"
+            >
+              Disponibilidad
+            </p>
           </div>
-          <div class="rounded-2xl p-5 border" style="background:rgba(255,255,255,0.07);border-color:rgba(255,255,255,0.12)">
-            <p class="text-2xl font-black text-white mb-0.5">94%</p>
-            <p class="text-white/60 text-xs font-bold uppercase tracking-widest">Productividad</p>
+
+          <div
+            class="rounded-2xl p-5 border"
+            style="
+              background:rgba(255,255,255,0.07);
+              border-color:rgba(255,255,255,0.12)
+            "
+          >
+            <p class="text-2xl font-black text-white">
+              94%
+            </p>
+
+            <p
+              class="text-white/60 text-xs font-bold uppercase tracking-widest"
+            >
+              Productividad
+            </p>
           </div>
-          <div class="rounded-2xl p-5 border" style="background:rgba(255,255,255,0.07);border-color:rgba(255,255,255,0.12)">
-            <p class="text-2xl font-black text-white mb-0.5">3.8</p>
-            <p class="text-white/60 text-xs font-bold uppercase tracking-widest">Gal/km promedio</p>
+
+          <div
+            class="rounded-2xl p-5 border"
+            style="
+              background:rgba(255,255,255,0.07);
+              border-color:rgba(255,255,255,0.12)
+            "
+          >
+            <p class="text-2xl font-black text-white">
+              3.8
+            </p>
+
+            <p
+              class="text-white/60 text-xs font-bold uppercase tracking-widest"
+            >
+              Gal/km promedio
+            </p>
           </div>
+
         </div>
+
       </div>
     </div>
 
-    <!-- ===== Login Side (Form) ===== -->
-    <div class="w-full md:w-1/2 lg:w-2/5 flex flex-col bg-white overflow-y-auto">
-      <div class="flex-grow flex flex-col justify-center px-8 sm:px-14 lg:px-16 py-12">
+    <!-- ═══════════════════════════════════════ -->
+    <!-- PANEL DERECHO -->
+    <!-- ═══════════════════════════════════════ -->
 
-        <!-- Mobile brand -->
-        <div class="md:hidden flex items-center gap-3 mb-10">
-          <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:linear-gradient(135deg,#4f6073,#3a4a5c)">
-            <span class="material-symbols-outlined text-white text-xl" style="font-variation-settings:'FILL' 1">local_shipping</span>
+    <div
+      class="w-full md:w-1/2 lg:w-2/5 flex flex-col bg-white overflow-y-auto"
+    >
+
+      <div
+        class="flex-grow flex flex-col justify-center px-8 sm:px-14 lg:px-16 py-10"
+      >
+
+        <!-- Marca móvil -->
+
+        <div class="md:hidden flex items-center gap-3 mb-8">
+
+          <div
+            class="w-10 h-10 rounded-xl flex items-center justify-center"
+            style="background:#4f6073"
+          >
+            <span
+              class="material-symbols-outlined text-white"
+            >
+              local_shipping
+            </span>
           </div>
-          <h1 class="text-xl font-black uppercase tracking-widest font-headline" style="color:#4f6073">Andina Logística</h1>
+
+          <h1
+            class="text-xl font-black uppercase tracking-widest"
+            style="color:#4f6073"
+          >
+            Andina Logística
+          </h1>
+
         </div>
 
-        <!-- Heading -->
-        <div class="mb-8">
-          <h2 class="text-3xl font-black text-slate-800 tracking-tight mb-1.5 font-headline">
-            Bienvenido de nuevo
+        <!-- ═══════════════════════════════════ -->
+        <!-- ROL -->
+        <!-- ═══════════════════════════════════ -->
+
+        <div
+          class="inline-flex self-start items-center gap-2 px-3 py-2 rounded-xl mb-4"
+          :style="{
+            backgroundColor: `${roleInfo.color}15`,
+            color: roleInfo.color
+          }"
+        >
+
+          <span class="material-symbols-outlined text-lg">
+            {{ roleInfo.icon }}
+          </span>
+
+          <span
+            class="text-xs font-black uppercase tracking-wider"
+          >
+            {{ roleInfo.label }}
+          </span>
+
+        </div>
+
+        <!-- TÍTULO -->
+
+        <div class="mb-7">
+
+          <h2
+            class="text-3xl font-black text-slate-800 tracking-tight mb-2"
+          >
+            {{ roleInfo.title }}
           </h2>
-          <p class="text-slate-500 font-medium text-sm">
-            Inicia sesión para acceder a tu consola de flota
+
+          <p
+            class="text-slate-500 font-medium text-sm"
+          >
+            {{ roleInfo.description }}
           </p>
+
         </div>
 
-        <!-- Server error -->
+        <!-- ═══════════════════════════════════ -->
+        <!-- ERROR -->
+        <!-- ═══════════════════════════════════ -->
+
         <div
           v-if="serverError"
+          class="mb-5 p-4 bg-red-50 border border-red-200 rounded-xl flex gap-3"
           role="alert"
-          class="mb-5 p-3.5 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3"
         >
-          <span class="material-symbols-outlined text-red-500 text-xl flex-shrink-0">error</span>
-          <p class="text-sm font-semibold text-red-600">{{ serverError }}</p>
+
+          <span
+            class="material-symbols-outlined text-red-500"
+          >
+            error
+          </span>
+
+          <p class="text-sm font-semibold text-red-600">
+            {{ serverError }}
+          </p>
+
         </div>
 
-        <!-- ── Social Login ── -->
+        <!-- ═══════════════════════════════════ -->
+        <!-- GOOGLE / MICROSOFT -->
+        <!-- ═══════════════════════════════════ -->
+
         <div class="grid grid-cols-2 gap-3 mb-6">
 
-          <!-- Google -->
           <button
             type="button"
             @click="loginWithGoogle"
             :disabled="socialLoading !== ''"
-            class="flex items-center justify-center gap-2.5 h-12 bg-white border-2 border-slate-200 rounded-xl hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-300/50 transition-all font-bold text-sm text-slate-700 shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+            class="flex items-center justify-center gap-2 h-12 bg-white border-2 border-slate-200 rounded-xl hover:bg-slate-50 transition font-bold text-sm text-slate-700 disabled:opacity-60"
           >
-            <template v-if="socialLoading === 'google'">
-              <span class="material-symbols-outlined text-[#4285F4] animate-spin text-xl">progress_activity</span>
-              <span>Conectando…</span>
-            </template>
-            <template v-else>
-              <!-- Google "G" SVG logo -->
-              <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
-                <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
-                <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/>
-                <path d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
-                <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
-              </svg>
+
+            <span
+              v-if="socialLoading === 'google'"
+              class="material-symbols-outlined animate-spin"
+            >
+              progress_activity
+            </span>
+
+            <span v-else class="font-black text-lg">
+              G
+            </span>
+
+            <span>
               Google
-            </template>
+            </span>
+
           </button>
 
-          <!-- Azure AD -->
           <button
             type="button"
             @click="loginWithAzure"
             :disabled="socialLoading !== ''"
-            class="flex items-center justify-center gap-2.5 h-12 bg-white border-2 border-slate-200 rounded-xl hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-sky-300/50 transition-all font-bold text-sm text-slate-700 shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+            class="flex items-center justify-center gap-2 h-12 bg-white border-2 border-slate-200 rounded-xl hover:bg-slate-50 transition font-bold text-sm text-slate-700 disabled:opacity-60"
           >
-            <template v-if="socialLoading === 'azure'">
-              <span class="material-symbols-outlined text-[#0078D4] animate-spin text-xl">progress_activity</span>
-              <span>Conectando…</span>
-            </template>
-            <template v-else>
-              <!-- Microsoft logo SVG -->
-              <svg width="18" height="18" viewBox="0 0 21 21" aria-hidden="true">
-                <rect x="1"  y="1"  width="9" height="9" fill="#F25022"/>
-                <rect x="11" y="1"  width="9" height="9" fill="#7FBA00"/>
-                <rect x="1"  y="11" width="9" height="9" fill="#00A4EF"/>
-                <rect x="11" y="11" width="9" height="9" fill="#FFB900"/>
-              </svg>
+
+            <span
+              v-if="socialLoading === 'azure'"
+              class="material-symbols-outlined animate-spin"
+            >
+              progress_activity
+            </span>
+
+            <span
+              v-else
+              class="w-4 h-4 grid grid-cols-2 gap-[2px]"
+            >
+              <span style="background:#F25022"></span>
+              <span style="background:#7FBA00"></span>
+              <span style="background:#00A4EF"></span>
+              <span style="background:#FFB900"></span>
+            </span>
+
+            <span>
               Microsoft
-            </template>
+            </span>
+
           </button>
 
         </div>
 
-        <!-- Divider -->
-        <div class="relative flex items-center mb-6">
+        <!-- DIVISOR -->
+
+        <div class="flex items-center mb-6">
+
           <div class="flex-1 h-px bg-slate-200"></div>
-          <span class="px-4 text-xs font-bold text-slate-400 uppercase tracking-widest">o con correo</span>
+
+          <span
+            class="px-4 text-xs font-bold text-slate-400 uppercase tracking-widest"
+          >
+            o con correo
+          </span>
+
           <div class="flex-1 h-px bg-slate-200"></div>
+
         </div>
 
-        <!-- Form -->
-        <form @submit.prevent="onSubmit" aria-labelledby="login-heading" novalidate class="space-y-5">
-          <h2 id="login-heading" class="sr-only">Formulario de inicio de sesión</h2>
+        <!-- ═══════════════════════════════════ -->
+        <!-- FORMULARIO -->
+        <!-- ═══════════════════════════════════ -->
 
-          <!-- Email -->
-          <div class="space-y-1.5">
-            <label for="email" class="block text-xs font-bold text-slate-600 uppercase tracking-wider">
-              Correo Corporativo
+        <form
+          @submit.prevent="onSubmit"
+          class="space-y-5"
+          novalidate
+        >
+
+          <!-- CORREO -->
+
+          <div>
+
+            <label
+              for="email"
+              class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2"
+            >
+              Correo corporativo
             </label>
+
             <div class="relative">
+
               <input
                 id="email"
                 v-model="email"
                 type="email"
                 name="email"
                 autocomplete="email"
-                required
-                aria-required="true"
-                :aria-invalid="!!emailError"
-                :aria-describedby="emailError ? 'email-error' : undefined"
                 placeholder="nombre@empresa.com"
-                class="w-full h-12 px-4 pr-11 bg-slate-50 text-slate-800 border-2 border-slate-200 rounded-xl focus:ring-0 focus:border-[#4f6073] focus:bg-white placeholder:text-slate-400 transition-all"
-                :class="{ 'border-red-400 bg-red-50': emailError }"
+                class="w-full h-12 px-4 pr-11 bg-slate-50 text-slate-800 border-2 border-slate-200 rounded-xl focus:outline-none focus:border-[#4f6073] focus:bg-white transition"
+                :class="{
+                  'border-red-400 bg-red-50':
+                    emailError
+                }"
               />
-              <span aria-hidden="true" class="material-symbols-outlined absolute right-3.5 top-3 text-slate-400 text-xl">mail</span>
+
+              <span
+                class="material-symbols-outlined absolute right-3.5 top-3 text-slate-400"
+              >
+                mail
+              </span>
+
             </div>
-            <p v-if="emailError" id="email-error" role="alert" class="text-xs font-semibold text-red-500 flex items-center gap-1">
-              <span class="material-symbols-outlined text-xs">error</span>{{ emailError }}
+
+            <p
+              v-if="emailError"
+              class="text-xs font-semibold text-red-500 mt-1"
+            >
+              {{ emailError }}
             </p>
+
           </div>
 
-          <!-- Password -->
-          <div class="space-y-1.5">
-            <div class="flex justify-between items-center">
-              <label for="password" class="block text-xs font-bold text-slate-600 uppercase tracking-wider">Contraseña</label>
-              <a href="#" class="text-xs font-bold hover:underline" style="color:#4f6073">¿Olvidaste tu contraseña?</a>
-            </div>
+          <!-- CONTRASEÑA -->
+
+          <div>
+
+            <label
+              for="password"
+              class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2"
+            >
+              Contraseña
+            </label>
+
             <div class="relative">
+
               <input
                 id="password"
                 v-model="password"
-                :type="showPassword ? 'text' : 'password'"
+                :type="
+                  showPassword
+                    ? 'text'
+                    : 'password'
+                "
                 name="password"
                 autocomplete="current-password"
-                required
-                aria-required="true"
-                :aria-invalid="!!passwordError"
-                :aria-describedby="passwordError ? 'password-error' : undefined"
                 placeholder="••••••••"
-                class="w-full h-12 px-4 pr-11 bg-slate-50 text-slate-800 border-2 border-slate-200 rounded-xl focus:ring-0 focus:border-[#4f6073] focus:bg-white placeholder:text-slate-400 transition-all"
-                :class="{ 'border-red-400 bg-red-50': passwordError }"
+                class="w-full h-12 px-4 pr-12 bg-slate-50 text-slate-800 border-2 border-slate-200 rounded-xl focus:outline-none focus:border-[#4f6073] focus:bg-white transition"
+                :class="{
+                  'border-red-400 bg-red-50':
+                    passwordError
+                }"
               />
+
               <button
                 type="button"
-                @click="showPassword = !showPassword"
-                :aria-label="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
-                class="absolute right-3.5 top-3 text-slate-400 hover:text-slate-600 transition-colors"
+                @click="
+                  showPassword = !showPassword
+                "
+                class="absolute right-3.5 top-3 text-slate-400 hover:text-slate-600"
+                :aria-label="
+                  showPassword
+                    ? 'Ocultar contraseña'
+                    : 'Mostrar contraseña'
+                "
               >
-                <span class="material-symbols-outlined text-xl">{{ showPassword ? 'visibility_off' : 'visibility' }}</span>
+
+                <span class="material-symbols-outlined">
+                  {{
+                    showPassword
+                      ? 'visibility_off'
+                      : 'visibility'
+                  }}
+                </span>
+
               </button>
+
             </div>
-            <p v-if="passwordError" id="password-error" role="alert" class="text-xs font-semibold text-red-500 flex items-center gap-1">
-              <span class="material-symbols-outlined text-xs">error</span>{{ passwordError }}
+
+            <p
+              v-if="passwordError"
+              class="text-xs font-semibold text-red-500 mt-1"
+            >
+              {{ passwordError }}
             </p>
+
           </div>
 
-          <!-- Remember -->
+          <!-- RECORDAR -->
+
           <div class="flex items-center">
+
             <input
               id="remember"
               v-model="remember"
               type="checkbox"
-              class="w-4 h-4 rounded border-2 border-slate-300 cursor-pointer"
+              class="w-4 h-4 rounded border-slate-300"
               style="accent-color:#4f6073"
             />
-            <label for="remember" class="ml-2.5 text-sm font-semibold text-slate-600 cursor-pointer">Recordar esta terminal</label>
+
+            <label
+              for="remember"
+              class="ml-2 text-sm font-semibold text-slate-600"
+            >
+              Recordar esta terminal
+            </label>
+
           </div>
 
-          <!-- Submit -->
+          <!-- BOTÓN -->
+
           <button
             type="submit"
-            :disabled="isSubmitting || socialLoading !== ''"
-            class="w-full h-13 py-3.5 text-white text-base font-bold rounded-xl shadow-lg hover:opacity-90 focus:outline-none focus:ring-4 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
-            style="background:linear-gradient(135deg,#4f6073 0%,#3a4a5c 100%);focus-ring-color:rgba(79,96,115,0.4)"
+            :disabled="
+              isSubmitting ||
+              socialLoading !== ''
+            "
+            class="w-full h-13 py-3.5 text-white text-base font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+            style="background:linear-gradient(135deg,#4f6073 0%,#3a4a5c 100%)"
           >
-            <template v-if="isSubmitting">
-              <span class="material-symbols-outlined animate-spin text-xl">progress_activity</span>
-              Verificando…
-            </template>
+
+            <span
+              v-if="isSubmitting"
+              class="material-symbols-outlined animate-spin"
+            >
+              progress_activity
+            </span>
+
+            <span v-if="isSubmitting">
+              Verificando...
+            </span>
+
             <template v-else>
-              Acceder a la consola
-              <span aria-hidden="true" class="material-symbols-outlined text-xl">login</span>
+
+              <span>
+                Acceder como {{ roleInfo.label }}
+              </span>
+
+              <span class="material-symbols-outlined">
+                login
+              </span>
+
             </template>
+
           </button>
+
         </form>
 
-        <!-- Demo hint -->
-        <div class="mt-5 p-3.5 rounded-xl border border-slate-200 bg-slate-50">
-          <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Acceso de demostración</p>
-          <p class="text-xs text-slate-400 font-mono">admin@andina.com / andina123</p>
-          <p class="text-[10px] text-slate-400 mt-1">También puedes usar Google o Microsoft sin credenciales reales.</p>
+        <!-- ═══════════════════════════════════ -->
+        <!-- DEMOSTRACIÓN -->
+        <!-- ═══════════════════════════════════ -->
+
+        <div
+          class="mt-5 p-4 rounded-xl border border-slate-200 bg-slate-50"
+        >
+
+          <p
+            class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2"
+          >
+            Acceso de demostración
+          </p>
+
+          <p class="text-xs text-slate-500">
+            <strong>Correo:</strong>
+            <span class="font-mono">
+              {{ roleInfo.email }}
+            </span>
+          </p>
+
+          <p class="text-xs text-slate-500 mt-1">
+            <strong>Contraseña:</strong>
+            <span class="font-mono">
+              {{ roleInfo.password }}
+            </span>
+          </p>
+
         </div>
 
-        <p class="mt-6 text-center text-sm font-semibold text-slate-500">
+        <!-- ═══════════════════════════════════ -->
+        <!-- CAMBIAR ROL -->
+        <!-- ═══════════════════════════════════ -->
+
+        <button
+          type="button"
+          @click="volverSeleccionRol"
+          class="w-full mt-4 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition flex items-center justify-center gap-2"
+        >
+
+          <span class="material-symbols-outlined text-lg">
+            swap_horiz
+          </span>
+
+          Cambiar tipo de usuario
+
+        </button>
+
+        <!-- SOLICITAR ACCESO -->
+
+        <p
+          class="mt-6 text-center text-sm font-semibold text-slate-500"
+        >
           ¿Nuevo en la plataforma?
-          <a href="#" class="font-bold hover:underline" style="color:#4f6073">Solicitar acceso</a>
+
+          <span
+            class="font-bold"
+            style="color:#4f6073"
+          >
+            Solicitar acceso
+          </span>
         </p>
+
       </div>
 
-      <!-- Footer -->
-      <footer class="px-8 sm:px-14 lg:px-16 py-6 bg-slate-50 border-t border-slate-100 mt-auto">
-        <div class="flex flex-col sm:flex-row justify-between items-center gap-3">
-          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-            © 2025 Andina Logística. Todos los derechos reservados.
-          </p>
-          <nav aria-label="Navegación del pie de página" class="flex gap-5">
-            <a href="#" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors">Privacidad</a>
-            <a href="#" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors">Términos</a>
-            <a href="#" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors">Soporte</a>
-          </nav>
-        </div>
+      <!-- FOOTER -->
+
+      <footer
+        class="px-8 sm:px-14 lg:px-16 py-5 bg-slate-50 border-t border-slate-100"
+      >
+
+        <p
+          class="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center"
+        >
+          © 2025 Andina Logística. Todos los derechos reservados.
+        </p>
+
       </footer>
+
     </div>
+
   </div>
 </template>
