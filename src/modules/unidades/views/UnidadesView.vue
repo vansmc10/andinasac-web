@@ -1,7 +1,9 @@
 <script setup>
 import { ref, computed } from 'vue'
+import { storeToRefs } from 'pinia'
 import AppLayout from '@/components/AppLayout.vue'
 import AppSelect from '@/components/AppSelect.vue'
+import { useUnidadesStore } from '../store/unidadesStore.js'
 
 const opsTipo = [
   { value: 'Camión Pesado',  label: 'Camión Pesado',  icon: 'local_shipping' },
@@ -29,14 +31,11 @@ const modalAbierto = ref(false)
 const modoEdicion = ref(false)
 const unidadSeleccionada = ref(null)
 
-const unidades = ref([
-  { id: 1, placa: 'TK-8829', modelo: 'Volvo FH16', año: 2021, tipo: 'Camión Pesado',    estado: 'activo',    conductor: 'Ricardo Morales', km: 42100,  combustible: 'Diesel', capacidad: '28 ton', vencimientoSOAT: '2025-08-15', vencimientoRevision: '2025-10-01', imagen: 'directions_bus' },
-  { id: 2, placa: 'TK-4102', modelo: 'Scania R500', año: 2020, tipo: 'Camión Pesado',    estado: 'alerta',   conductor: 'Elena Suárez',   km: 88200,  combustible: 'Diesel', capacidad: '32 ton', vencimientoSOAT: '2025-06-20', vencimientoRevision: '2025-07-10', imagen: 'local_shipping' },
-  { id: 3, placa: 'TK-9931', modelo: 'Mercedes Actros', año: 2019, tipo: 'Tráiler',      estado: 'mantenimiento', conductor: 'Jorge Ruiz', km: 215900, combustible: 'Diesel', capacidad: '35 ton', vencimientoSOAT: '2025-12-01', vencimientoRevision: '2025-11-15', imagen: 'local_shipping' },
-  { id: 4, placa: 'TK-3314', modelo: 'MAN TGX',    año: 2022, tipo: 'Camión Mediano',   estado: 'activo',    conductor: 'Carmen López',   km: 124500, combustible: 'Diesel', capacidad: '20 ton', vencimientoSOAT: '2026-01-30', vencimientoRevision: '2025-09-20', imagen: 'airport_shuttle' },
-  { id: 5, placa: 'TK-2201', modelo: 'Volvo FMX',  año: 2023, tipo: 'Camión Pesado',    estado: 'activo',    conductor: 'Luis Torres',     km: 18300,  combustible: 'Diesel', capacidad: '25 ton', vencimientoSOAT: '2026-03-15', vencimientoRevision: '2026-02-01', imagen: 'directions_bus' },
-  { id: 6, placa: 'TK-7750', modelo: 'DAF XF',     año: 2020, tipo: 'Tráiler',          estado: 'inactivo',  conductor: '—',               km: 301200, combustible: 'Diesel', capacidad: '33 ton', vencimientoSOAT: '2025-05-30', vencimientoRevision: '2025-06-15', imagen: 'local_shipping' },
-])
+// La flota vive en un store (src/modules/unidades/store/unidadesStore.js)
+// para no perderse al salir de esta pantalla o cerrar sesión, y para que
+// otros módulos (ej. asignación de usuarios a camiones) lean la misma lista.
+const unidadesStore = useUnidadesStore()
+const { unidades } = storeToRefs(unidadesStore)
 
 const estadoConfig = {
   activo:        { label: 'Activo',        clase: 'bg-emerald-100 text-emerald-800' },

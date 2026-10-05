@@ -5,6 +5,7 @@ import { toTypedSchema } from '@vee-validate/zod'
 import { z } from 'zod'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../store/authStore.js'
+import { homeRouteFor } from '@/core/permissions.js'
 
 const router    = useRouter()
 const route     = useRoute()
@@ -29,9 +30,16 @@ const serverError      = ref('')
 const socialLoading    = ref('')  // 'google' | 'azure' | ''
 
 // ── Redirigir tras login ──────────────────────────────────
+// Si venía de una URL protegida se respeta esa URL (el guard del router
+// igual la bloqueará si el rol no tiene acceso); si no, cada rol cae en
+// su propia página de inicio (ver src/core/permissions.js).
 async function afterLogin() {
   const redirect = route.query.redirect
-  await router.push(redirect && redirect !== '/' ? redirect : { name: 'dashboard' })
+  if (redirect && redirect !== '/') {
+    await router.push(redirect)
+    return
+  }
+  await router.push({ name: homeRouteFor(authStore.user?.role) })
 }
 
 // ── Login email/password ──────────────────────────────────
@@ -411,7 +419,8 @@ async function loginWithAzure() {
         <!-- Demo hint -->
         <div class="mt-5 p-3.5 rounded-xl border border-slate-200 bg-slate-50">
           <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Acceso de demostración</p>
-          <p class="text-xs text-slate-400 font-mono">admin@andina.com / andina123</p>
+          <p class="text-xs text-slate-400 font-mono">admin@andina.com / andina123 <span class="text-slate-300">(Administrador)</span></p>
+          <p class="text-xs text-slate-400 font-mono">conductor@andina.com / conductor123 <span class="text-slate-300">(Conductor)</span></p>
           <p class="text-[10px] text-slate-400 mt-1">También puedes usar Google o Microsoft sin credenciales reales.</p>
         </div>
 

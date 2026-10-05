@@ -1,21 +1,31 @@
 <script setup>
 import AppLayout from '@/components/AppLayout.vue'
 import { ref, reactive, computed, onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/modules/auth/store/authStore.js'
+import { useCurrency } from '../composables/useCurrency.js'
+import { useUsuariosStore } from '../store/usuariosStore.js'
+import { useUnidadesStore } from '@/modules/unidades/store/unidadesStore.js'
+import { ROLES, ROLE_LABELS, MODULES, getRolePermissions, setRolePermissions } from '@/core/permissions.js'
 
 const authStore = useAuthStore()
+const { currency, currencyCode, currencies, setCurrency } = useCurrency()
+
+const esAdmin = authStore.user?.role === ROLES.ADMIN
 
 // Animación entrada
 const loaded = ref(false)
 onMounted(() => setTimeout(() => { loaded.value = true }, 120))
 
 // ── Tabs ──────────────────────────────────────────────────
+// "Usuarios y Perfiles" solo se ofrece al rol Administrador.
 const tabs = [
   { id: 'perfil',         label: 'Perfil',          icon: 'person'           },
   { id: 'notificaciones', label: 'Notificaciones',   icon: 'notifications'    },
   { id: 'apariencia',     label: 'Apariencia',       icon: 'palette'          },
   { id: 'seguridad',      label: 'Seguridad',        icon: 'security'         },
   { id: 'sistema',        label: 'Sistema',          icon: 'tune'             },
+  ...(esAdmin ? [{ id: 'usuarios', label: 'Usuarios y Perfiles', icon: 'admin_panel_settings' }] : []),
 ]
 const activeTab = ref('perfil')
 
@@ -101,6 +111,123 @@ const sistemaGuardado = ref(false)
 function guardarSistema() {
   sistemaGuardado.value = true
   setTimeout(() => { sistemaGuardado.value = false }, 2500)
+}
+
+// ── Usuarios y Perfiles (solo Administrador) ──────────────
+const usuariosStore = esAdmin ? useUsuariosStore() : null
+const { usuarios } = esAdmin ? storeToRefs(usuariosStore) : { usuarios: ref([]) }
+
+const unidadesStore = esAdmin ? useUnidadesStore() : null
+const { unidades } = esAdmin ? storeToRefs(unidadesStore) : { unidades: ref([]) }
+const opsUnidadesAsignables = computed(() => unidades.value.map(u => ({
+  value: u.placa, label: `${u.placa} — ${u.modelo}`, icon: 'local_shipping',
+})))
+
+const opsRolUsuario = [
+  { value: ROLES.CONDUCTOR,  label: 'Conductor',      icon: 'badge' },
+  { value: ROLES.SUPERVISOR, label: 'Supervisor',     icon: 'supervisor_account' },
+  { value: ROLES.ADMIN,      label: 'Administrador',  icon: 'shield_person' },
+]
+
+function rolLabel(rol) { return ROLE_LABELS[rol] ?? rol }
+function rolBadgeClass(rol) {
+  return {
+    [ROLES.ADMIN]:      'bg-violet-50 text-violet-700 border-violet-200',
+    [ROLES.SUPERVISOR]: 'bg-blue-50 text-blue-700 border-blue-200',
+    [ROLES.CONDUCTOR]:  'bg-emerald-50 text-emerald-700 border-emerald-200',
+  }[rol] ?? 'bg-slate-100 text-slate-600 border-slate-200'
+}
+
+// -- Matriz de permisos por rol (Conductor / Supervisor) --
+// El Administrador siempre tiene acceso total y no se lista aquí.
+const permisos = reactive(getRolePermissions())
+const permisosGuardado = ref(false)
+function tienePermiso(rol, route) {
+  return permisos[rol]?.includes(route) ?? false
+}
+function togglePermiso(rol, route) {
+  const lista = permisos[rol]
+  const idx = lista.indexOf(route)
+  if (idx === -1) lista.push(route)
+  else lista.splice(idx, 1)
+}
+function guardarPermisos() {
+  setRolePermissions({ [ROLES.SUPERVISOR]: permisos[ROLES.SUPERVISOR], [ROLES.CONDUCTOR]: permisos[ROLES.CONDUCTOR] })
+  permisosGuardado.value = true
+  setTimeout(() => { permisosGuardado.value = false }, 2500)
+}
+
+// -- CRUD de usuarios --
+const modalUsuarioAbierto  = ref(false)
+const modoEdicionUsuario   = ref(false)
+const usuarioSeleccionado  = ref(null)
+const formUsuario  = ref({ nombre: '', email: '', password: '', rol: ROLES.CONDUCTOR, unidadesAsignadas: [] })
+const erroresUsuario = ref({})
+
+function abrirNuevoUsuario() {
+  modoEdicionUsuario.value = false
+  formUsuario.value = { nombre: '', email: '', password: '', rol: ROLES.CONDUCTOR, unidadesAsignadas: [] }
+  erroresUsuario.value = {}
+  modalUsuarioAbierto.value = true
+}
+function abrirEditarUsuario(u) {
+  modoEdicionUsuario.value = true
+  usuarioSeleccionado.value = u
+  formUsuario.value = { nombre: u.nombre, email: u.email, password: '', rol: u.rol, unidadesAsignadas: [...(u.unidadesAsignadas || [])] }
+  erroresUsuario.value = {}
+  modalUsuarioAbierto.value = true
+}
+function cerrarModalUsuario() {
+  modalUsuarioAbierto.value = false
+}
+function validarUsuario() {
+  const e = {}
+  if (!formUsuario.value.nombre.trim()) e.nombre = 'Ingresa el nombre'
+  if (!formUsuario.value.email.trim()) {
+    e.email = 'Ingresa el correo'
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formUsuario.value.email)) {
+    e.email = 'Correo inválido'
+  } else if (usuariosStore.existeEmail(formUsuario.value.email, modoEdicionUsuario.value ? usuarioSeleccionado.value?.id : null)) {
+    e.email = 'Ese correo ya está en uso'
+  }
+  const nuevaPassword = formUsuario.value.password
+  if (!modoEdicionUsuario.value && nuevaPassword.length < 6) e.password = 'Mínimo 6 caracteres'
+  if (modoEdicionUsuario.value && nuevaPassword && nuevaPassword.length < 6) e.password = 'Mínimo 6 caracteres'
+  erroresUsuario.value = e
+  return Object.keys(e).length === 0
+}
+function guardarUsuario() {
+  if (!validarUsuario()) return
+  if (modoEdicionUsuario.value) {
+    const cambios = {
+      nombre: formUsuario.value.nombre.trim(),
+      email:  formUsuario.value.email.trim(),
+      rol:    formUsuario.value.rol,
+      unidadesAsignadas: formUsuario.value.unidadesAsignadas,
+    }
+    if (formUsuario.value.password) cambios.password = formUsuario.value.password
+    usuariosStore.actualizar(usuarioSeleccionado.value.id, cambios)
+  } else {
+    usuariosStore.crear({
+      nombre: formUsuario.value.nombre.trim(),
+      email:  formUsuario.value.email.trim(),
+      password: formUsuario.value.password,
+      rol: formUsuario.value.rol,
+      unidadesAsignadas: formUsuario.value.unidadesAsignadas,
+    })
+  }
+  modalUsuarioAbierto.value = false
+}
+function esUsuarioActual(u) {
+  return u.email === authStore.user?.email
+}
+function eliminarUsuario(u) {
+  if (esUsuarioActual(u)) { alert('No puedes eliminar tu propia cuenta.'); return }
+  if (confirm(`¿Eliminar al usuario ${u.nombre}?`)) usuariosStore.eliminar(u.id)
+}
+function toggleActivoUsuario(u) {
+  if (esUsuarioActual(u)) { alert('No puedes desactivar tu propia cuenta.'); return }
+  usuariosStore.toggleActivo(u.id)
 }
 </script>
 
@@ -582,6 +709,21 @@ function guardarSistema() {
                         </button>
                       </div>
                     </div>
+                    <!-- Moneda -->
+                    <div class="space-y-1.5">
+                      <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Moneda</label>
+                      <div class="flex rounded-xl overflow-hidden border border-slate-200">
+                        <button v-for="c in currencies" :key="c.code"
+                          @click="setCurrency(c.code)"
+                          type="button"
+                          class="flex-1 py-2.5 text-sm font-bold transition-colors"
+                          :class="currencyCode === c.code ? 'text-white' : 'text-slate-500 hover:bg-slate-50'"
+                          :style="currencyCode === c.code ? 'background:linear-gradient(135deg,#4f6073,#3a4a5c)' : ''">
+                          {{ c.symbol }} {{ c.name }}
+                        </button>
+                      </div>
+                      <p class="text-[11px] text-slate-400">Los montos en Consumo, Mantenimiento y Reportes se muestran en {{ currency.name }}.</p>
+                    </div>
                   </div>
 
                   <div class="flex items-center gap-3 mt-6 pt-5 border-t border-slate-100">
@@ -618,6 +760,205 @@ function guardarSistema() {
                   </div>
                 </div>
               </div>
+
+            </section>
+
+            <!-- ══ USUARIOS Y PERFILES (solo Administrador) ══ -->
+            <section v-if="activeTab === 'usuarios' && esAdmin" class="space-y-5">
+
+              <!-- Matriz de permisos por rol -->
+              <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                <div class="px-6 py-4 flex items-center gap-3" style="background:linear-gradient(135deg,#4f6073 0%,#3a4a5c 100%)">
+                  <span class="material-symbols-outlined text-white" style="font-variation-settings:'FILL' 1">tune</span>
+                  <div>
+                    <h3 class="font-black text-white text-sm">Permisos por Rol</h3>
+                    <p class="text-[11px] text-white/60 font-semibold">Activa o desactiva a qué módulos tiene acceso cada rol. El Administrador siempre tiene acceso total.</p>
+                  </div>
+                </div>
+                <div class="p-6 overflow-x-auto">
+                  <table class="w-full text-sm min-w-[420px]">
+                    <thead>
+                      <tr class="border-b border-slate-100">
+                        <th class="text-left py-2 pr-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Módulo</th>
+                        <th class="text-center py-2 px-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Supervisor</th>
+                        <th class="text-center py-2 px-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Conductor</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-50">
+                      <tr v-for="m in MODULES" :key="m.route">
+                        <td class="py-2.5 pr-4 font-semibold text-slate-700">{{ m.label }}</td>
+                        <td class="py-2.5 px-4 text-center">
+                          <button type="button" role="switch" :aria-checked="tienePermiso('supervisor', m.route)"
+                            :aria-label="`Supervisor — ${m.label}`"
+                            @click="togglePermiso('supervisor', m.route)"
+                            class="w-10 h-6 rounded-full relative transition-colors mx-auto"
+                            :class="tienePermiso('supervisor', m.route) ? '' : 'bg-slate-200'"
+                            :style="tienePermiso('supervisor', m.route) ? 'background:#4f6073' : ''">
+                            <span class="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all"
+                              :style="tienePermiso('supervisor', m.route) ? 'left:18px' : 'left:2px'"></span>
+                          </button>
+                        </td>
+                        <td class="py-2.5 px-4 text-center">
+                          <button type="button" role="switch" :aria-checked="tienePermiso('conductor', m.route)"
+                            :aria-label="`Conductor — ${m.label}`"
+                            @click="togglePermiso('conductor', m.route)"
+                            class="w-10 h-6 rounded-full relative transition-colors mx-auto"
+                            :class="tienePermiso('conductor', m.route) ? '' : 'bg-slate-200'"
+                            :style="tienePermiso('conductor', m.route) ? 'background:#4f6073' : ''">
+                            <span class="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all"
+                              :style="tienePermiso('conductor', m.route) ? 'left:18px' : 'left:2px'"></span>
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+
+                  <div class="flex items-center gap-3 mt-6 pt-5 border-t border-slate-100">
+                    <button @click="guardarPermisos"
+                      class="flex items-center gap-2 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-all hover:opacity-90 active:scale-95"
+                      style="background:linear-gradient(135deg,#4f6073 0%,#3a4a5c 100%)">
+                      <span class="material-symbols-outlined text-base" style="font-variation-settings:'FILL' 1">save</span>
+                      Guardar permisos
+                    </button>
+                    <Transition name="fade-msg">
+                      <span v-if="permisosGuardado" class="flex items-center gap-1.5 text-sm font-bold text-emerald-600">
+                        <span class="material-symbols-outlined text-base" style="font-variation-settings:'FILL' 1">check_circle</span>
+                        Guardado correctamente
+                      </span>
+                    </Transition>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Lista de usuarios -->
+              <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                <div class="px-6 py-4 flex items-center justify-between gap-3" style="background:linear-gradient(135deg,#4f6073 0%,#3a4a5c 100%)">
+                  <div class="flex items-center gap-3">
+                    <span class="material-symbols-outlined text-white" style="font-variation-settings:'FILL' 1">group</span>
+                    <h3 class="font-black text-white text-sm">Usuarios ({{ usuarios.length }})</h3>
+                  </div>
+                  <button @click="abrirNuevoUsuario"
+                    class="flex items-center gap-1.5 bg-white/15 hover:bg-white/25 text-white px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wide transition-colors">
+                    <span class="material-symbols-outlined text-base">add</span>
+                    Nuevo usuario
+                  </button>
+                </div>
+                <div class="divide-y divide-slate-50">
+                  <div v-for="u in usuarios" :key="u.id" class="flex items-center gap-3 px-6 py-3.5 hover:bg-slate-50/60 transition-colors">
+                    <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-white text-xs font-black"
+                      style="background:linear-gradient(135deg,#4f6073,#3a4a5c)">
+                      {{ u.nombre.split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase() }}
+                    </div>
+                    <div class="min-w-0 flex-1">
+                      <div class="flex items-center gap-2 flex-wrap">
+                        <p class="text-sm font-bold text-slate-800 truncate">{{ u.nombre }}</p>
+                        <span v-if="esUsuarioActual(u)" class="text-[9px] font-black uppercase text-slate-400">(tú)</span>
+                      </div>
+                      <p class="text-[11px] text-slate-400 truncate">{{ u.email }}</p>
+                      <p v-if="u.unidadesAsignadas?.length" class="text-[10px] text-slate-400 mt-0.5">
+                        <span class="material-symbols-outlined text-[12px] align-middle">local_shipping</span>
+                        {{ u.unidadesAsignadas.join(', ') }}
+                      </p>
+                    </div>
+                    <span class="text-[10px] font-black px-2.5 py-1 rounded-full border uppercase tracking-wide flex-shrink-0" :class="rolBadgeClass(u.rol)">
+                      {{ rolLabel(u.rol) }}
+                    </span>
+                    <span class="text-[10px] font-black px-2.5 py-1 rounded-full flex-shrink-0"
+                      :class="u.activo !== false ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'">
+                      {{ u.activo !== false ? 'Activo' : 'Inactivo' }}
+                    </span>
+                    <div class="flex items-center gap-1 flex-shrink-0">
+                      <button @click="toggleActivoUsuario(u)" :aria-label="u.activo !== false ? 'Desactivar' : 'Activar'"
+                        class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500 transition-colors">
+                        <span class="material-symbols-outlined text-[18px]">{{ u.activo !== false ? 'toggle_on' : 'toggle_off' }}</span>
+                      </button>
+                      <button @click="abrirEditarUsuario(u)" aria-label="Editar usuario" class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500 transition-colors">
+                        <span class="material-symbols-outlined text-[18px]">edit</span>
+                      </button>
+                      <button @click="eliminarUsuario(u)" aria-label="Eliminar usuario" class="p-1.5 rounded-lg hover:bg-red-50 text-slate-500 hover:text-red-600 transition-colors">
+                        <span class="material-symbols-outlined text-[18px]">delete</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Modal Nuevo/Editar usuario -->
+              <Transition name="fade-msg">
+                <div v-if="modalUsuarioAbierto" class="fixed inset-0 z-[60] flex items-center justify-center p-4" style="background:rgba(15,23,42,0.55)">
+                  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+                    <div class="px-6 py-4 flex items-center justify-between" style="background:linear-gradient(135deg,#4f6073 0%,#3a4a5c 100%)">
+                      <h3 class="font-black text-white text-sm">{{ modoEdicionUsuario ? 'Editar Usuario' : 'Nuevo Usuario' }}</h3>
+                      <button @click="cerrarModalUsuario" aria-label="Cerrar" class="p-1.5 rounded-lg bg-white/10 hover:bg-white/25 text-white transition-all">
+                        <span class="material-symbols-outlined text-xl">close</span>
+                      </button>
+                    </div>
+                    <form @submit.prevent="guardarUsuario" class="p-6 space-y-4" novalidate>
+                      <div>
+                        <label class="block text-[11px] font-black text-slate-500 uppercase tracking-widest mb-1.5" for="us-nombre">Nombre completo *</label>
+                        <input id="us-nombre" v-model="formUsuario.nombre" placeholder="Ej: Carmen López"
+                          class="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:border-[#4f6073] focus:bg-white transition-all" />
+                        <p v-if="erroresUsuario.nombre" role="alert" class="text-xs text-red-500 font-bold mt-1">{{ erroresUsuario.nombre }}</p>
+                      </div>
+                      <div>
+                        <label class="block text-[11px] font-black text-slate-500 uppercase tracking-widest mb-1.5" for="us-email">Correo *</label>
+                        <input id="us-email" v-model="formUsuario.email" type="email" placeholder="nombre@andina.com"
+                          class="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:border-[#4f6073] focus:bg-white transition-all" />
+                        <p v-if="erroresUsuario.email" role="alert" class="text-xs text-red-500 font-bold mt-1">{{ erroresUsuario.email }}</p>
+                      </div>
+                      <div>
+                        <label class="block text-[11px] font-black text-slate-500 uppercase tracking-widest mb-1.5" for="us-password">
+                          Contraseña {{ modoEdicionUsuario ? '(dejar vacío para no cambiarla)' : '*' }}
+                        </label>
+                        <input id="us-password" v-model="formUsuario.password" type="password" placeholder="••••••••"
+                          class="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:border-[#4f6073] focus:bg-white transition-all" />
+                        <p v-if="erroresUsuario.password" role="alert" class="text-xs text-red-500 font-bold mt-1">{{ erroresUsuario.password }}</p>
+                      </div>
+                      <div>
+                        <label class="block text-[11px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Rol *</label>
+                        <div class="flex rounded-xl overflow-hidden border border-slate-200">
+                          <button v-for="r in opsRolUsuario" :key="r.value" type="button"
+                            @click="formUsuario.rol = r.value"
+                            class="flex-1 py-2.5 text-xs font-bold transition-colors"
+                            :class="formUsuario.rol === r.value ? 'text-white' : 'text-slate-500 hover:bg-slate-50'"
+                            :style="formUsuario.rol === r.value ? 'background:linear-gradient(135deg,#4f6073,#3a4a5c)' : ''">
+                            {{ r.label }}
+                          </button>
+                        </div>
+                      </div>
+                      <div v-if="formUsuario.rol !== 'admin'">
+                        <label class="block text-[11px] font-black text-slate-500 uppercase tracking-widest mb-1.5">Camiones asignados</label>
+                        <div class="flex flex-wrap gap-1.5 p-2.5 bg-slate-50 border border-slate-200 rounded-xl max-h-32 overflow-y-auto">
+                          <button v-for="op in opsUnidadesAsignables" :key="op.value" type="button"
+                            @click="formUsuario.unidadesAsignadas.includes(op.value)
+                              ? (formUsuario.unidadesAsignadas = formUsuario.unidadesAsignadas.filter(v => v !== op.value))
+                              : formUsuario.unidadesAsignadas.push(op.value)"
+                            class="px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-colors"
+                            :class="formUsuario.unidadesAsignadas.includes(op.value)
+                              ? 'text-white border-transparent'
+                              : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-100'"
+                            :style="formUsuario.unidadesAsignadas.includes(op.value) ? 'background:#4f6073' : ''">
+                            {{ op.value }}
+                          </button>
+                        </div>
+                        <p class="text-[10px] text-slate-400 mt-1">Elige uno o varios. Un Conductor sin unidad asignada aún puede registrar cargas de combustible.</p>
+                      </div>
+                      <div class="flex items-center gap-3 pt-2">
+                        <button type="submit"
+                          class="flex-1 flex items-center justify-center gap-2 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-all hover:opacity-90 active:scale-95"
+                          style="background:linear-gradient(135deg,#4f6073 0%,#3a4a5c 100%)">
+                          <span class="material-symbols-outlined text-base" style="font-variation-settings:'FILL' 1">save</span>
+                          {{ modoEdicionUsuario ? 'Guardar cambios' : 'Crear usuario' }}
+                        </button>
+                        <button type="button" @click="cerrarModalUsuario"
+                          class="px-5 py-2.5 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-100 transition-colors">
+                          Cancelar
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </Transition>
 
             </section>
 

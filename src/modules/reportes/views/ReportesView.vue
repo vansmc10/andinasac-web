@@ -3,6 +3,9 @@ import { ref, computed } from 'vue'
 import AppLayout from '@/components/AppLayout.vue'
 import AppSelect from '@/components/AppSelect.vue'
 import * as XLSX from 'xlsx'
+import { useCurrency } from '@/modules/configuracion/composables/useCurrency.js'
+
+const { currency, formatCurrency } = useCurrency()
 
 // ── Filtros ────────────────────────────────────────────────
 const periodoSel    = ref('30d')
@@ -109,7 +112,7 @@ async function exportarExcel() {
     'Mes':                    b.mes,
     'Consumo (%)':            b.consumo,
     'Kilometraje (%)':        b.km,
-    'Costo USD':              b.costo,
+    [`Costo ${currency.value.code}`]: b.costo,
     'Viajes Completados':     b.viajes,
   }))
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(resumen), 'Resumen Mensual')
@@ -121,7 +124,7 @@ async function exportarExcel() {
     'Ruta':         r.ruta,
     'Km Recorridos': r.km,
     'Consumo (L)':  r.consumo,
-    'Costo (USD)':  r.costo,
+    [`Costo (${currency.value.code})`]: r.costo,
     'Eficiencia':   r.eficiencia,
     'Estado':       r.estado,
   }))
@@ -153,7 +156,7 @@ async function exportarExcel() {
 function exportarCSV() {
   const datos = tablaDetalle.value
   const cols = ['placa', 'conductor', 'ruta', 'km', 'consumo', 'costo', 'eficiencia', 'estado']
-  const headers = ['Placa', 'Conductor', 'Ruta', 'Km', 'Consumo(L)', 'Costo(USD)', 'Eficiencia', 'Estado']
+  const headers = ['Placa', 'Conductor', 'Ruta', 'Km', 'Consumo(L)', `Costo(${currency.value.code})`, 'Eficiencia', 'Estado']
   const rows = datos.map(r => cols.map(c => `"${r[c]}"`).join(','))
   const csv = [headers.join(','), ...rows].join('\n')
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
@@ -253,7 +256,7 @@ const tablaOrdenada = computed(() => {
         v-for="[valor, label, icon, color, bg] in [
           [kpis.totalViajes,                 'Viajes periodo',    'flight_takeoff', '#4f6073', 'rgba(79,96,115,0.10)'  ],
           [kpis.totalKm.toLocaleString()+' km', 'Km recorridos', 'route',          '#2563eb', 'rgba(37,99,235,0.10)'  ],
-          ['$'+kpis.totalCosto.toFixed(0),   'Costo total',       'payments',       '#059669', 'rgba(5,150,105,0.10)'  ],
+          [formatCurrency(kpis.totalCosto, { decimals: 0 }), 'Costo total', 'payments', '#059669', 'rgba(5,150,105,0.10)'  ],
           [kpis.eficProm,                    'Eficiencia prom.',  'speed',          '#d97706', 'rgba(217,119,6,0.10)'  ],
         ]"
         :key="label"
@@ -362,7 +365,7 @@ const tablaOrdenada = computed(() => {
                   <div class="font-black text-sm mb-0.5">{{ b.mes }} {{ new Date().getFullYear() }}</div>
                   <div>Consumo: <strong>{{ b.consumo }}%</strong></div>
                   <div>Km: <strong>{{ b.km }}%</strong></div>
-                  <div>Costo: <strong>${{ b.costo.toLocaleString() }}</strong></div>
+                  <div>Costo: <strong>{{ formatCurrency(b.costo, { decimals: 0 }) }}</strong></div>
                   <div>Viajes: <strong>{{ b.viajes }}</strong></div>
                 </div>
               </Transition>
@@ -456,7 +459,7 @@ const tablaOrdenada = computed(() => {
                     </div>
                   </td>
                   <td class="px-4 py-3.5 font-bold text-on-surface text-xs">{{ r.consumo }} L</td>
-                  <td class="px-4 py-3.5 font-black text-on-surface text-xs">${{ r.costo.toFixed(2) }}</td>
+                  <td class="px-4 py-3.5 font-black text-on-surface text-xs">{{ formatCurrency(r.costo) }}</td>
                   <td class="px-4 py-3.5">
                     <span
                       class="text-[10px] font-black px-2 py-0.5 rounded-full border"
@@ -609,7 +612,7 @@ const tablaOrdenada = computed(() => {
             <div>
               <p class="text-xs font-black uppercase tracking-wider mb-1.5 text-primary">Recomendación IA</p>
               <p class="text-xs leading-relaxed text-on-surface font-medium">
-                Reducir el ralentí en Flota Pesada un <strong>5%</strong> podría ahorrar hasta <strong>$12,400 USD</strong> en combustible este trimestre.
+                Reducir el ralentí en Flota Pesada un <strong>5%</strong> podría ahorrar hasta <strong>{{ formatCurrency(12400, { decimals: 0 }) }}</strong> en combustible este trimestre.
               </p>
             </div>
           </div>
@@ -624,7 +627,7 @@ const tablaOrdenada = computed(() => {
             <div v-for="[icon, label, valor, color] in [
               ['flight_takeoff', 'Total viajes',    kpis.totalViajes,                  '#4f6073'],
               ['route',          'Km recorridos',   kpis.totalKm.toLocaleString()+' km', '#2563eb'],
-              ['payments',       'Costo total',     '$'+kpis.totalCosto.toFixed(0),    '#059669'],
+              ['payments',       'Costo total',     formatCurrency(kpis.totalCosto, { decimals: 0 }), '#059669'],
               ['speed',          'Eficiencia prom.',kpis.eficProm,                     '#d97706'],
             ]" :key="label" class="flex items-center gap-3 px-5 py-3.5 hover:bg-surface-container/50 transition-colors">
               <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" :style="{ background: color+'18' }">

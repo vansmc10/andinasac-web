@@ -1,0 +1,106 @@
+INFORME TECNICO FACTUAL: andinasac-web
+Fecha: 2026-10-04
+
+Alcance: inspeccion de lectura y comandos solicitados. No se editaron ni crearon archivos de la aplicacion. El estado de Git mostro modificaciones y archivos sin seguimiento durante la revision; no se alteraron. Las referencias indican archivo y linea aproximada.
+
+1. STACK Y PROYECTO
+
+Stack: Vue 3, Vite, JavaScript con modulos ES, Vue Router, Pinia y PrimeVue. Dependencias declaradas: @azure/msal-browser ^5.10.1, @primeuix/themes ^2.0.3, @vee-validate/zod ^4.15.1, axios ^1.16.1, leaflet ^1.9.4, maplibre-gl ^5.24.0, pinia ^3.0.4, primeicons ^7.0.0, primevue ^4.5.5, vee-validate ^4.15.1, vue ^3.5.32, vue-router ^5.0.7, xlsx ^0.18.5, zod ^3.25.76. DevDependencies: @tailwindcss/vite ^4.3.0, @vitejs/plugin-vue ^6.0.6, tailwindcss ^4.3.0, vite ^8.0.10. (package.json:11)
+Scripts: dev, build, preview. (package.json:6)
+Vitest, Jest, Cypress, Playwright: NO EXISTE. ESLint y Prettier: NO EXISTE. Carpeta de tests y archivos *.spec/*.test: NO EXISTE. .github/workflows: NO EXISTE. No hay scripts lint ni test en package.json. (package.json:6)
+README: existe. Se titula “Vue 3 + Vite”; dice que es una plantilla de inicio, menciona componentes Vue <script setup> y enlaza documentación de Vue para script setup y soporte del IDE. (README.md:1)
+Arbol de carpetas, hasta tres niveles dentro de src/:
+
+src/
+  assets/  components/  core/  router/
+  modules/
+    auth/{composables,services,store,views}
+    conductores/{store,views}
+    configuracion/{composables,store,views}
+    consumo/{store,views}
+    dashboard/{views}
+    mantenimiento/{views}
+    mapa/{views}
+    reportes/{views}
+    unidades/{store,views}
+  plantillas/
+    consumo_accesible/ dashboard_accesible_fleet_architect/
+    fleet_logic_pro/ login_accesible/ mantenimiento_accesible/
+    mapa_en_vivo_accesible/ reportes_accesibles/
+
+2. DATOS Y PERSISTENCIA
+
+Claves directas de localStorage: token, user, app.usuarios, app.rolePermissions, app.currency, unidades.flota, conductores.lista, consumo.registros, andina-a11y. Se usan para sesion/usuario, cuentas demo, permisos por rol, moneda, flota, conductores, registros de combustible y accesibilidad. (src/modules/auth/store/authStore.js:24; src/modules/configuracion/store/usuariosStore.js:18; src/core/permissions.js:55; src/modules/configuracion/store/settingsStore.js:20; src/modules/unidades/store/unidadesStore.js:11; src/modules/conductores/store/conductoresStore.js:16; src/modules/consumo/store/consumoStore.js:14; src/components/AccessibilityBar.vue:10)
+sessionStorage se configura como ubicacion de cache de MSAL para Azure; la aplicacion no declara una clave propia ahi. (src/modules/auth/views/LoginView.vue:144)
+Unidades, conductores, consumo y usuarios tienen datos semilla en codigo. Los stores cargan localStorage si existe y guardan cambios mediante watch; de lo contrario usan la semilla. (stores correspondientes, lineas 13-43)
+localStorage normalmente sobrevive recargas y cierre/reapertura del navegador hasta que se borre; sessionStorage de MSAL es de sesion. No hay backend de persistencia para esos stores.
+Las contrasenas de las cuentas demo se guardan en claro y se comparan directamente; no se encuentra hash en ese flujo. El store lo documenta. (src/modules/configuracion/store/usuariosStore.js:14)
+
+3. AUTENTICACION Y CONTROL DE ACCESO
+
+Rutas: / es login (requiresAuth false, layout blank); /dashboard, /mapa, /consumo, /mantenimiento, /reportes, /unidades, /conductores y /configuracion tienen requiresAuth true; cualquier otra ruta redirige a /. No hay roles declarados en meta de cada ruta. (src/router/index.js:4)
+El guard verifica token en localStorage y luego ejecuta canAccessRoute(role, to.name). Valida sesion y permiso de ruta segun el rol/configuracion almacenada. (src/router/index.js:70-87; src/core/permissions.js:85)
+Conductor por defecto solo tiene unidades y consumo; escribir /configuracion, /reportes o /conductores redirige a su ruta principal, /unidades. El mapa de permisos puede cambiarse desde Configuracion por rol, aunque Configuracion no esta entre los modulos configurables. (src/core/permissions.js:41; src/router/index.js:87)
+Acciones de Unidades: no se ocultan ni bloquean por rol en la vista; Nueva Unidad, editar y eliminar no llevan comprobaciones de rol. Las acciones de fila se muestran visualmente al pasar el cursor, pero no hay autorizacion por rol. (src/modules/unidades/views/UnidadesView.vue:145, 293)
+Expiracion por inactividad de 30 minutos: NO EXISTE en el codigo revisado. El store elimina la sesion al ejecutar logout; el guard no valida antiguedad. (src/modules/auth/store/authStore.js:64)
+Politica de contrasena al crear usuario: no exige 8 caracteres, mayusculas, numeros ni simbolos; la validacion de alta acepta desde 6 caracteres. (src/modules/configuracion/views/ConfiguracionView.vue:194)
+Credenciales demo visibles en login: si: admin@andina.com / andina123 (Administrador) y conductor@andina.com / conductor123 (Conductor). (src/modules/auth/views/LoginView.vue:421)
+
+4. MODULOS Y QUE ES REAL VS FIJO
+
+Resumen: KPIs y alertas son arreglos fijos; el mapa previo es una ilustracion con marcadores decorativos. (src/modules/dashboard/views/DashboardView.vue:9)
+Mapa en Vivo: interfaz de Google Maps; vehiculos/rutas estan codificados en la vista y el GPS se simula cada 2 segundos. (src/modules/mapa/views/MapaView.vue:51, 393, 429)
+Consumo: registros, filtros y KPIs de cargas usan el store persistido; selector de vehiculo, eficiencia y panel de alertas son datos fijos. (src/modules/consumo/views/ConsumoView.vue:33, 93, 108)
+Mantenimiento: permite agregar elementos a una lista reactiva local; no se persiste en store. KPIs, alertas, costos y calendario son fijos. (src/modules/mantenimiento/views/MantenimientoView.vue:57, 65, 73)
+Reportes: graficos y registros provienen de arreglos fijos; hay filtrado parcial y exportacion. (src/modules/reportes/views/ReportesView.vue:39, 58)
+Unidades: lista, busqueda, filtros y CRUD usan el store persistido en localStorage. (src/modules/unidades/views/UnidadesView.vue:34; src/modules/unidades/store/unidadesStore.js:32)
+Conductores: usa store persistido y la vista ofrece acciones de alta/edicion/eliminacion. (src/modules/conductores/store/conductoresStore.js:39; src/modules/conductores/views/ConductoresView.vue:75)
+Configuracion: moneda, usuarios y permisos se guardan; varias preferencias visuales/notificaciones son estado local de la vista. (src/modules/configuracion/store/settingsStore.js:35; src/modules/configuracion/views/ConfiguracionView.vue:43)
+Reportes exporta XLSX y CSV. PDF real: NO EXISTE; el boton de historial PDF solo muestra alert(...). Hay filtro de periodo y conductor; no hay filtro de cliente ni vehiculo individual. El selector de flota/zona existe en pantalla, pero flotaSel no interviene en los calculos. (src/modules/reportes/views/ReportesView.vue:12, 103, 174)
+Mapa usa Google Maps JavaScript API mediante window.google.maps.importLibrary; aunque leaflet y maplibre-gl estan en dependencias, esta vista usa Google Maps. No usa GPS real: posiciones y rutas son datos codificados y simulados. (src/modules/mapa/views/MapaView.vue:387, 429; package.json:16)
+
+5. MODULO CONSUMO DE COMBUSTIBLE
+
+El selector Vehiculo usa opsVehiculo, definido directamente en ConsumoView.vue; no lee unidadesStore. Sus codigos (por ejemplo VOL-882) difieren de las placas semilla de Unidades (TK-8829). (src/modules/consumo/views/ConsumoView.vue:33; src/modules/unidades/store/unidadesStore.js:14)
+Formula: precio por galon = total pagado / cantidad. Si cantidad o total son cero/no positivos, devuelve null y se muestra —; cantidad vacia, cero o negativa impide guardar por validacion. (src/modules/consumo/views/ConsumoView.vue:138, 149)
+Kilometraje: solo se exige que sea positivo; no se compara con el registro anterior. (src/modules/consumo/views/ConsumoView.vue:154)
+Desvios detectados cuenta registrosFiltrados con alerta === true; las nuevas cargas se crean con alerta: false. El panel Alertas Criticas es fijo y muestra un texto de desvio del 25%; la eficiencia por vehiculo tambien esta codificada. No encontre regla de +20% sobre promedio. (src/modules/consumo/views/ConsumoView.vue:96, 108, 182, 306)
+Fecha: se persiste fechaISO como fecha de formulario YYYY-MM-DD y se genera una fecha visible con toLocaleDateString('es-PE'), sin zona horaria explicita. La fecha visible depende de la zona horaria del navegador; al interpretar una fecha sin hora como Date, puede desplazarse el dia en zonas al oeste de UTC. (src/modules/consumo/views/ConsumoView.vue:168)
+
+6. MONEDA Y CONFIGURACION
+
+La moneda seleccionada se persiste como app.currency. Consumo, Mantenimiento y Reportes llaman useCurrency para mostrar simbolo/formato; XLSX/CSV tambien etiqueta la moneda. No convierte importes: el store declara que cambiar moneda solo cambia simbolo/etiqueta. (src/modules/configuracion/store/settingsStore.js:8, 35; vistas correspondientes)
+
+7. ACCESIBILIDAD
+
+Barra: tamano de fuente A-/A+ y restablecer (80-150% en pasos de 10), alto contraste, filtros de deuteranopia/protanopia/tritanopia y narracion de voz; persiste esas cuatro preferencias en andina-a11y. (src/components/AccessibilityBar.vue:5, 56)
+La narracion usa speechSynthesis para anunciar cambios de controles; no es una integracion completa con lector de pantalla. Los filtros de contraste y daltonismo tienen reglas CSS asociadas. (src/components/AccessibilityBar.vue:17; src/core/index.css:205)
+Hay usos de aria-*, role, etiquetas label, algunos alt, atajos de teclado en controles concretos y estilos :focus-visible. Atajos globales: NO EXISTE. Skip to content: NO EXISTE. (src/components/AppSelect.vue:108; src/core/index.css:146)
+Encabezados por vista: Login h1x2, h2x3; Conductores h2x1, h3x1; Configuracion h2x1, h3x12; Consumo h2x2, h3x3; Resumen h2x1, h3x2; Mantenimiento h2x2, h3x3; Mapa h2x3, h3x2; Reportes h2x1, h3x8; Unidades h2x1. No se encontraron h4-h6 en esas vistas. El layout añade un h1 con la marca. (src/modules/*/views/*.vue; src/components/AppLayout.vue:76)
+
+8. CALIDAD DEL CODIGO
+
+Diez archivos de texto mas largos de src/ (lineas): Configuracion 980; Mapa 978; Consumo 691; Reportes 649; Mantenimiento 621; plantilla HTML de Reportes 519; plantilla HTML de Consumo 476; Login 448; plantilla HTML de Mantenimiento 439; plantilla HTML de Dashboard 410.
+Duplicacion: varios stores repiten lectura JSON de localStorage y watch profundo para guardar listas. Ademas, placas/modelos se repiten en stores, mapa, consumo y reportes con codigos y valores distintos. (src/modules/unidades/store/unidadesStore.js:24; src/modules/conductores/store/conductoresStore.js:29; src/modules/consumo/store/consumoStore.js:29; src/modules/mapa/views/MapaView.vue:51; src/modules/reportes/views/ReportesView.vue:60)
+console.log: 0. FIXME: 0. TODO literal sensible a mayusculas: 2 coincidencias, ambas texto de interfaz (VER TODO y VER TODO EL ARCHIVO), no marcadores tecnicos. (src/modules/reportes/views/ReportesView.vue:493; src/plantillas/reportes_accesibles/code.html:356)
+
+9. COMANDOS
+
+npm audit --omit=dev: 6 vulnerabilidades de produccion: 1 critica, 5 altas, 0 moderadas, 0 bajas. Afecta directamente maplibre-gl (critica; correccion indicada requiere actualizacion major), axios (alta) y xlsx (alta, sin correccion indicada); tambien aparecen form-data, nanoid y postcss como dependencias afectadas/transitivas.
+npm outdated: 14 paquetes. Entre las mayores diferencias: maplibre-gl 5.24.0 -> 6.12.0; primevue 4.5.5 -> 5.0.2; pinia 3.0.4 -> 4.0.3; primeicons 7.0.0 -> 8.0.2; @azure/msal-browser 5.10.1 -> 5.24.0. El comando comparo versiones instaladas, wanted y latest.
+npm run build: no ejecutado para respetar “no crear ni modificar archivos”; Vite genera/escribe dist. El dist existente mide 1,811,760 bytes (no certifica el estado actual del codigo fuente). Bundles existentes: index-BKeaedkc.js 252,313 B; xlsx-Dxmr3vC7.js 424,762 B; LoginView-DWIIke6e.js 108,059 B; CSS principal 100,985 B; ConfiguracionView 43,553 B; MapaView 32,923 B. (package.json:8)
+npm run lint y npm test: no ejecutados; esos scripts NO EXISTE en package.json.
+
+10. GIT
+
+Repositorio Git: si. Remote origin: https://github.com/vansmc10/andinasac-web.git (sin credenciales).
+Commits: 1. Ramas informadas: main y origin/main.
+Ultimo commit: 2026-09-06 22:47:11 -05:00, mensaje “first push”. El estado de Git mostro modificaciones y archivos no seguidos durante la inspeccion; no se modificaron.
+
+HALLAZGOS DE CALIDAD O SEGURIDAD
+
+- El inicio con Google/Azure termina en una sesion local simulada; loginWithProvider asigna rol admin al usuario recibido, sin validacion de permisos contra un backend en ese store. (src/modules/auth/store/authStore.js:50)
+- El token y rol estan en localStorage, y la autorizacion descrita es del lado cliente. No equivale a control de acceso en servidor. (src/modules/auth/store/authStore.js:24; src/core/permissions.js:100)
+- La accion Cambiar contrasena valida longitud/coincidencia y muestra exito, pero no actualiza el store ni una API; el cambio no queda aplicado. (src/modules/configuracion/views/ConfiguracionView.vue:80)
+- XLSX historico de Reportes genera una hoja con metadatos del reporte, no el reporte historico indicado por su titulo; la descarga PDF solo muestra un aviso. (src/modules/reportes/views/ReportesView.vue:174)
+- El proyecto declara simultaneamente Leaflet y MapLibre, pero la vista de mapa activa usa Google Maps. Ademas, moneda USD/PEN cambia formato, no valor economico. (package.json:16; src/modules/mapa/views/MapaView.vue:393; src/modules/configuracion/store/settingsStore.js:8)

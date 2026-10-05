@@ -2,6 +2,23 @@
 import AppLayout from '@/components/AppLayout.vue'
 import AppSelect from '@/components/AppSelect.vue'
 import { ref, computed, onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useCurrency } from '@/modules/configuracion/composables/useCurrency.js'
+import { useConductoresStore } from '@/modules/conductores/store/conductoresStore.js'
+import { useConsumoStore } from '../store/consumoStore.js'
+
+const { currency, formatCurrency } = useCurrency()
+
+// Conductores activos registrados en el módulo Conductores, para elegir en
+// el formulario de carga de combustible (fuente única: src/modules/conductores).
+const conductoresStore = useConductoresStore()
+const { activos: conductoresActivos } = storeToRefs(conductoresStore)
+const opsConductor = computed(() => conductoresActivos.value.map(c => ({
+  value: c.codigo,
+  label: `${c.nombre} — ${c.codigo}`,
+  nombre: c.nombre,
+  icon: 'badge',
+})))
 
 const loaded = ref(false)
 onMounted(() => setTimeout(() => { loaded.value = true }, 120))
@@ -39,18 +56,10 @@ const opsTipoCombustible = [
 ]
 
 // ── Registros con fechaISO y vehiculoId para filtrar ─────
-const registros = ref([
-  { fechaISO: '2025-05-14', fecha: '14 May, 2025', hora: '08:45 AM', vehiculoId: 'VOL-882', vehiculo: 'VOL-882 (Volvo FH16)',    estacion: 'Shell Express – Central',  cantidad: 45.0, costo: 215.50, km: '124,500', alerta: false, tipo: 'Diésel B5'  },
-  { fechaISO: '2025-05-14', fecha: '14 May, 2025', hora: '06:20 AM', vehiculoId: 'SCA-102', vehiculo: 'SCA-102 (Scania R450)',   estacion: 'BP Transworld',             cantidad: 82.3, costo: 395.00, km: '88,240',  alerta: false, tipo: 'Diésel B5'  },
-  { fechaISO: '2025-05-13', fecha: '13 May, 2025', hora: '11:15 PM', vehiculoId: 'MAN-404', vehiculo: 'MAN-404 (MAN TGX)',       estacion: 'PetroMax #12',              cantidad: 32.1, costo: 152.80, km: '215,900', alerta: true,  tipo: 'Diésel B20' },
-  { fechaISO: '2025-05-13', fecha: '13 May, 2025', hora: '02:30 PM', vehiculoId: 'MER-310', vehiculo: 'MER-310 (Mercedes)',      estacion: 'Repsol Autopista',          cantidad: 60.5, costo: 290.40, km: '98,120',  alerta: false, tipo: 'Diésel B5'  },
-  { fechaISO: '2025-05-12', fecha: '12 May, 2025', hora: '09:00 AM', vehiculoId: 'VOL-882', vehiculo: 'VOL-882 (Volvo FH16)',    estacion: 'Shell Express – Norte',     cantidad: 50.2, costo: 241.00, km: '124,000', alerta: false, tipo: 'Diésel B5'  },
-  { fechaISO: '2025-04-28', fecha: '28 Abr, 2025', hora: '03:10 PM', vehiculoId: 'TK-2201', vehiculo: 'TK-2201 (Volvo FMX)',    estacion: 'Shell Express – Central',   cantidad: 38.7, costo: 185.76, km: '18,200',  alerta: false, tipo: 'Diésel B5'  },
-  { fechaISO: '2025-04-25', fecha: '25 Abr, 2025', hora: '07:45 AM', vehiculoId: 'SCA-102', vehiculo: 'SCA-102 (Scania R450)',   estacion: 'BP Transworld',             cantidad: 75.0, costo: 360.00, km: '87,500',  alerta: false, tipo: 'Diésel B20' },
-  { fechaISO: '2025-04-20', fecha: '20 Abr, 2025', hora: '10:30 AM', vehiculoId: 'MAN-404', vehiculo: 'MAN-404 (MAN TGX)',       estacion: 'Repsol Autopista',          cantidad: 41.0, costo: 196.80, km: '215,200', alerta: true,  tipo: 'Diésel B5'  },
-  { fechaISO: '2025-03-15', fecha: '15 Mar, 2025', hora: '08:00 AM', vehiculoId: 'MER-310', vehiculo: 'MER-310 (Mercedes)',      estacion: 'Shell Express – Central',   cantidad: 55.0, costo: 264.00, km: '97,600',  alerta: false, tipo: 'Diésel B5'  },
-  { fechaISO: '2025-02-10', fecha: '10 Feb, 2025', hora: '04:20 PM', vehiculoId: 'VOL-882', vehiculo: 'VOL-882 (Volvo FH16)',    estacion: 'Shell Express – Norte',     cantidad: 48.0, costo: 230.40, km: '122,000', alerta: false, tipo: 'GNV'        },
-])
+// Viven en un store (src/modules/consumo/store/consumoStore.js) para que
+// no se pierdan al salir de esta pantalla o cerrar sesión.
+const consumoStore = useConsumoStore()
+const { registros } = storeToRefs(consumoStore)
 
 // ── Límite de fecha según periodo ────────────────────────
 const limiteISO = computed(() => {
@@ -114,14 +123,23 @@ const ahora = new Date().toTimeString().slice(0, 5)
 
 const form = ref({
   vehiculo: '', estacion: '', otraEstacion: '', tipo: 'diesel-b5',
-  cantidad: '', precioPorGalon: '', km: '', fecha: hoy, hora: ahora,
+  cantidad: '', total: '', km: '', fecha: hoy, hora: ahora,
   conductor: '', notas: '',
 })
 
+// El conductor ingresa cuánto pagó en total (como sale en el ticket del
+// grifo) y cuántos galones cargó; el precio por galón se calcula solo,
+// dividiendo el total entre la cantidad — no se pide como dato aparte.
 const costoTotal = computed(() => {
-  const q = parseFloat(form.value.cantidad)     || 0
-  const p = parseFloat(form.value.precioPorGalon) || 0
-  return (q * p).toFixed(2)
+  const t = parseFloat(form.value.total) || 0
+  return t.toFixed(2)
+})
+
+const precioPorGalon = computed(() => {
+  const q = parseFloat(form.value.cantidad) || 0
+  const t = parseFloat(form.value.total)    || 0
+  if (q <= 0 || t <= 0) return null
+  return t / q
 })
 
 const errores = ref({})
@@ -132,7 +150,7 @@ function validar() {
   if (!form.value.estacion)  e.estacion  = 'Selecciona la estación'
   if (form.value.estacion === 'otra' && !form.value.otraEstacion.trim()) e.otraEstacion = 'Ingresa el nombre'
   if (!form.value.cantidad  || parseFloat(form.value.cantidad)      <= 0) e.cantidad = 'Ingresa los galones'
-  if (!form.value.precioPorGalon || parseFloat(form.value.precioPorGalon) <= 0) e.precio = 'Ingresa el precio'
+  if (!form.value.total     || parseFloat(form.value.total)         <= 0) e.total    = 'Ingresa el total pagado'
   if (!form.value.km        || parseInt(form.value.km)              <= 0) e.km       = 'Ingresa el kilometraje'
   if (!form.value.fecha) e.fecha = 'Selecciona la fecha'
   errores.value = e
@@ -145,6 +163,7 @@ function guardar() {
   const estacionLabel = form.value.estacion === 'otra'
     ? form.value.otraEstacion
     : opsEstacion.find(e => e.value === form.value.estacion)?.label ?? form.value.estacion
+  const conductorLabel = opsConductor.value.find(c => c.value === form.value.conductor)?.nombre ?? form.value.conductor
 
   const fechaDisplay = new Date(form.value.fecha).toLocaleDateString('es-PE', { day:'2-digit', month:'short', year:'numeric' })
 
@@ -155,8 +174,10 @@ function guardar() {
     vehiculoId: form.value.vehiculo,
     vehiculo:   `${form.value.vehiculo} (${vehiculoLabel})`,
     estacion:   estacionLabel,
+    conductor:  conductorLabel,
     cantidad:   parseFloat(form.value.cantidad),
     costo:      parseFloat(costoTotal.value),
+    precioPorGalon: precioPorGalon.value,
     km:         parseInt(form.value.km).toLocaleString(),
     alerta:     false,
     tipo:       opsTipoCombustible.find(t => t.value === form.value.tipo)?.label ?? form.value.tipo,
@@ -167,7 +188,7 @@ function guardar() {
 function cerrar() {
   modalAbierto.value = false
   errores.value = {}
-  form.value = { vehiculo:'', estacion:'', otraEstacion:'', tipo:'diesel-b5', cantidad:'', precioPorGalon:'', km:'', fecha:hoy, hora:ahora, conductor:'', notas:'' }
+  form.value = { vehiculo:'', estacion:'', otraEstacion:'', tipo:'diesel-b5', cantidad:'', total:'', km:'', fecha:hoy, hora:ahora, conductor:'', notas:'' }
 }
 </script>
 
@@ -202,7 +223,7 @@ function cerrar() {
         v-for="[valor, label, icon, color, bg] in [
           [kpis.cargas,                     'Cargas registradas', 'receipt_long',     '#4f6073', 'rgba(79,96,115,0.10)'  ],
           [kpis.totalGalones + ' Gal',      'Total combustible',  'local_gas_station','#2563eb', 'rgba(37,99,235,0.10)'  ],
-          ['$' + kpis.totalCosto,           'Gasto total',        'payments',         '#059669', 'rgba(5,150,105,0.10)'  ],
+          [formatCurrency(kpis.totalCosto), 'Gasto total',        'payments',         '#059669', 'rgba(5,150,105,0.10)'  ],
           [kpis.alertas + (kpis.alertas === 1 ? ' alerta' : ' alertas'), 'Desvíos detectados', 'warning', '#dc2626', 'rgba(220,38,38,0.10)'],
         ]"
         :key="label"
@@ -421,7 +442,10 @@ function cerrar() {
                   <div class="w-7 h-7 rounded-lg bg-surface-container flex items-center justify-center shrink-0">
                     <span class="material-symbols-outlined text-[14px] text-on-surface-variant" style="font-variation-settings:'FILL' 1">local_shipping</span>
                   </div>
-                  <span class="text-xs font-bold text-on-surface">{{ r.vehiculo }}</span>
+                  <div class="min-w-0">
+                    <p class="text-xs font-bold text-on-surface leading-tight">{{ r.vehiculo }}</p>
+                    <p v-if="r.conductor" class="text-[10px] text-on-surface-variant font-semibold leading-tight mt-0.5 truncate">{{ r.conductor }}</p>
+                  </div>
                 </div>
               </td>
               <td class="px-5 py-4 hidden md:table-cell">
@@ -440,7 +464,7 @@ function cerrar() {
                 </div>
               </td>
               <td class="px-5 py-4">
-                <span class="text-sm font-black text-on-surface">${{ r.costo.toFixed(2) }}</span>
+                <span class="text-sm font-black text-on-surface">{{ formatCurrency(r.costo) }}</span>
               </td>
               <td class="px-5 py-4 hidden lg:table-cell">
                 <span class="text-xs font-bold text-on-surface">{{ r.km }} km</span>
@@ -512,12 +536,12 @@ function cerrar() {
               </button>
             </div>
 
-            <!-- Costo en tiempo real -->
+            <!-- Total a pagar -->
             <div class="px-7 py-3 bg-surface-container border-b border-surface-container-high flex items-center justify-between">
-              <span class="text-xs font-black text-on-surface-variant uppercase tracking-widest">Costo Estimado</span>
+              <span class="text-xs font-black text-on-surface-variant uppercase tracking-widest">Total a Pagar</span>
               <div class="flex items-baseline gap-1">
-                <span class="text-2xl font-black font-headline text-on-surface">${{ costoTotal }}</span>
-                <span class="text-xs font-bold text-on-surface-variant">USD</span>
+                <span class="text-2xl font-black font-headline text-on-surface">{{ formatCurrency(costoTotal) }}</span>
+                <span class="text-xs font-bold text-on-surface-variant">{{ currency.code }}</span>
               </div>
             </div>
 
@@ -532,8 +556,7 @@ function cerrar() {
                   </p>
                 </div>
                 <div>
-                  <label class="block text-[11px] font-black text-on-surface-variant uppercase tracking-widest mb-1.5" for="cc-conductor">Conductor</label>
-                  <input id="cc-conductor" v-model="form.conductor" placeholder="Nombre del conductor" class="w-full px-3 py-2.5 text-sm" />
+                  <AppSelect v-model="form.conductor" :options="opsConductor" label="Conductor" :searchable="true" placeholder="Seleccionar conductor…" />
                 </div>
               </div>
 
@@ -557,7 +580,7 @@ function cerrar() {
                 </div>
               </div>
 
-              <!-- Cantidad + Precio/Gal -->
+              <!-- Cantidad + Total pagado -->
               <div class="grid grid-cols-2 gap-5">
                 <div>
                   <label class="block text-[11px] font-black text-on-surface-variant uppercase tracking-widest mb-1.5" for="cc-cantidad">Cantidad (Galones) *</label>
@@ -570,18 +593,18 @@ function cerrar() {
                   </p>
                 </div>
                 <div>
-                  <label class="block text-[11px] font-black text-on-surface-variant uppercase tracking-widest mb-1.5" for="cc-precio">Precio por Galón *</label>
+                  <label class="block text-[11px] font-black text-on-surface-variant uppercase tracking-widest mb-1.5" for="cc-total">Total Pagado *</label>
                   <div class="relative">
-                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-black text-on-surface-variant">$</span>
-                    <input id="cc-precio" v-model="form.precioPorGalon" type="number" min="0.01" step="0.01" placeholder="4.79" class="w-full pl-7 pr-3 py-2.5 text-sm" />
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-black text-on-surface-variant">{{ currency.symbol }}</span>
+                    <input id="cc-total" v-model="form.total" type="number" min="0.01" step="0.01" placeholder="85.00" class="w-full pl-7 pr-3 py-2.5 text-sm" />
                   </div>
-                  <p v-if="errores.precio" role="alert" class="text-xs text-error font-bold mt-1 flex items-center gap-1">
-                    <span class="material-symbols-outlined text-sm">error</span>{{ errores.precio }}
+                  <p v-if="errores.total" role="alert" class="text-xs text-error font-bold mt-1 flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm">error</span>{{ errores.total }}
                   </p>
                 </div>
               </div>
 
-              <!-- KM + Subtotal visual -->
+              <!-- KM + Precio por galón (calculado) -->
               <div class="grid grid-cols-2 gap-5">
                 <div>
                   <label class="block text-[11px] font-black text-on-surface-variant uppercase tracking-widest mb-1.5" for="cc-km">Kilometraje Actual *</label>
@@ -594,9 +617,13 @@ function cerrar() {
                   </p>
                 </div>
                 <div class="bg-surface-container rounded-xl p-4 border border-surface-container-high flex flex-col justify-center">
-                  <p class="text-[10px] font-black text-on-surface-variant uppercase tracking-widest mb-1">Subtotal a pagar</p>
-                  <p class="text-2xl font-black font-headline text-on-surface">${{ costoTotal }}</p>
-                  <p class="text-[10px] text-on-surface-variant mt-1">{{ form.cantidad || '0' }} Gal × ${{ form.precioPorGalon || '0.00' }}</p>
+                  <p class="text-[10px] font-black text-on-surface-variant uppercase tracking-widest mb-1">Precio por Galón</p>
+                  <p class="text-2xl font-black font-headline text-on-surface">
+                    {{ precioPorGalon !== null ? formatCurrency(precioPorGalon) : '—' }}
+                  </p>
+                  <p class="text-[10px] text-on-surface-variant mt-1">
+                    {{ currency.symbol }}{{ form.total || '0.00' }} ÷ {{ form.cantidad || '0' }} Gal
+                  </p>
                 </div>
               </div>
 

@@ -1,6 +1,9 @@
 <script setup>
 import AppLayout from '@/components/AppLayout.vue'
 import { ref, reactive, computed, onMounted } from 'vue'
+import { useCurrency } from '@/modules/configuracion/composables/useCurrency.js'
+
+const { currency, formatCurrency } = useCurrency()
 
 const loaded = ref(false)
 onMounted(() => setTimeout(() => { loaded.value = true }, 120))
@@ -51,12 +54,12 @@ function guardar() {
 }
 
 // ── KPI data ──────────────────────────────────────────────
-const kpis = [
+const kpis = computed(() => [
   { label: 'En Taller',       value: '14',      unit: 'unidades', icon: 'build',           color: '#4f6073', bg: 'rgba(79,96,115,0.10)',  trend: '+2 desde ayer',   trendIcon: 'trending_up',   trendColor: 'text-slate-500' },
   { label: 'Programados Hoy', value: '06',      unit: 'servicios', icon: 'event_available', color: '#059669', bg: 'rgba(5,150,105,0.10)',  trend: '4 prev · 2 corr', trendIcon: 'schedule',      trendColor: 'text-emerald-600' },
   { label: 'Alertas Críticas',value: '03',      unit: 'urgentes',  icon: 'warning',         color: '#dc2626', bg: 'rgba(220,38,38,0.10)',  trend: 'Acción inmediata', trendIcon: 'priority_high', trendColor: 'text-red-600' },
-  { label: 'Gasto del Mes',   value: '$24.8k',  unit: 'soles',     icon: 'payments',        color: '#d97706', bg: 'rgba(217,119,6,0.10)',  trend: '-12% vs Abril',   trendIcon: 'arrow_downward',trendColor: 'text-emerald-600' },
-]
+  { label: 'Gasto del Mes',   value: `${currency.value.symbol}24.8k`, unit: currency.value.code, icon: 'payments',        color: '#d97706', bg: 'rgba(217,119,6,0.10)',  trend: '-12% vs Abril',   trendIcon: 'arrow_downward',trendColor: 'text-emerald-600' },
+])
 
 // ── Alertas ───────────────────────────────────────────────
 const alertas = [
@@ -308,7 +311,7 @@ const today = 14
             <div class="flex items-start justify-between">
               <div>
                 <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Gasto Total del Mes</p>
-                <p class="text-3xl font-black font-headline">$24,850</p>
+                <p class="text-3xl font-black font-headline">{{ formatCurrency(24850, { decimals: 0 }) }}</p>
                 <div class="flex items-center gap-2 mt-2">
                   <span class="flex items-center text-emerald-400 font-bold text-xs gap-0.5">
                     <span class="material-symbols-outlined text-sm">arrow_downward</span>-12% vs Abril
@@ -334,7 +337,7 @@ const today = 14
               </div>
               <div class="flex items-center gap-2 shrink-0">
                 <span class="text-[10px] font-black px-2 py-0.5 rounded-full border" :class="costoBadge[c.tipo]">{{ c.tipo }}</span>
-                <span class="text-sm font-black text-slate-800">${{ c.monto.toLocaleString('es', { minimumFractionDigits: 2 }) }}</span>
+                <span class="text-sm font-black text-slate-800">{{ formatCurrency(c.monto) }}</span>
                 <button aria-label="Ver detalle" class="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-slate-100 text-slate-500 transition-all">
                   <span class="material-symbols-outlined text-sm">visibility</span>
                 </button>

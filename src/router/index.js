@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { canAccessRoute, homeRouteFor, getStoredRole } from '@/core/permissions.js'
 
 const routes = [
   {
@@ -75,9 +76,16 @@ router.beforeEach((to) => {
     return { name: 'login', query: { redirect: to.fullPath } }
   }
 
-  // ── Ya logueado intenta entrar al login → redirige al dashboard
+  const role = getStoredRole()
+
+  // ── Ya logueado intenta entrar al login → redirige a su página de inicio según su rol
   if (to.name === 'login' && token) {
-    return { name: 'dashboard' }
+    return { name: homeRouteFor(role) }
+  }
+
+  // ── Ruta protegida a la que el rol del usuario no tiene acceso → redirige a su home
+  if (requiresAuth && !canAccessRoute(role, to.name)) {
+    return { name: homeRouteFor(role) }
   }
 })
 

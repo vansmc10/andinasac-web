@@ -2,10 +2,14 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuth } from '@/modules/auth/composables/useAuth.js'
+import { canAccessRoute } from '@/core/permissions.js'
 import AccessibilityBar from '@/components/AccessibilityBar.vue'
 
 const { user, handleLogout } = useAuth()
 const route = useRoute()
+
+// Rol del usuario en sesión — determina qué secciones del menú se muestran.
+const role = computed(() => user.value?.role)
 
 // ── Sidebar responsive ────────────────────────────────────
 const isMobile    = ref(false)
@@ -24,7 +28,9 @@ onMounted(() => { checkBreakpoint(); window.addEventListener('resize', checkBrea
 onUnmounted(() => { window.removeEventListener('resize', checkBreakpoint) })
 
 // ── Navegación ────────────────────────────────────────────
-const navSections = [
+// Lista completa; se filtra por rol más abajo (canAccessRoute usa el
+// nombre de ruta, que coincide con el segmento de `to` sin la barra inicial).
+const allNavSections = [
   {
     label: 'Operaciones',
     items: [
@@ -43,6 +49,15 @@ const navSections = [
     ],
   },
 ]
+
+const navSections = computed(() =>
+  allNavSections
+    .map((section) => ({
+      ...section,
+      items: section.items.filter((item) => canAccessRoute(role.value, item.to.slice(1))),
+    }))
+    .filter((section) => section.items.length > 0)
+)
 
 function isActive(to) {
   return route.path === to || (to !== '/' && route.path.startsWith(to))
@@ -157,8 +172,9 @@ const userInitials = computed(() => {
       <!-- ── Footer del sidebar ── -->
       <div class="flex-shrink-0 border-t border-slate-100 px-3 py-3 space-y-0.5">
 
-        <!-- Configuración -->
+        <!-- Configuración (solo roles con acceso) -->
         <RouterLink
+          v-if="canAccessRoute(role, 'configuracion')"
           to="/configuracion"
           class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
           :class="isActive('/configuracion')
@@ -253,6 +269,7 @@ const userInitials = computed(() => {
 
         <slot name="header-action">
           <RouterLink
+            v-if="canAccessRoute(role, 'reportes')"
             to="/reportes"
             class="hidden sm:flex items-center gap-2 text-white px-4 py-2 rounded-xl text-sm font-bold transition-all hover:opacity-90 active:scale-95"
             style="background:linear-gradient(135deg,#4f6073 0%,#3a4a5c 100%)"

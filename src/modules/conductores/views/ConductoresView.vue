@@ -1,7 +1,9 @@
 <script setup>
 import { ref, computed } from 'vue'
+import { storeToRefs } from 'pinia'
 import AppLayout from '@/components/AppLayout.vue'
 import AppSelect from '@/components/AppSelect.vue'
+import { useConductoresStore } from '../store/conductoresStore.js'
 
 const opsLicencia = [
   { value: 'A-I',    label: 'A-I    — Motos',            icon: 'two_wheeler'    },
@@ -23,14 +25,11 @@ const modalAbierto = ref(false)
 const modoEdicion = ref(false)
 const conductorSeleccionado = ref(null)
 
-const conductores = ref([
-  { id: 1, codigo: 'CON-001', nombre: 'Ricardo Morales',  dni: '45231879', telefono: '987-654-321', email: 'r.morales@andina.com',   licencia: 'A-IIIb', vencLicencia: '2026-03-15', estado: 'activo',    unidad: 'TK-8829', km: 42100,  viajes: 156, calificacion: 4.8, foto: 'person' },
-  { id: 2, codigo: 'CON-002', nombre: 'Elena Suárez',     dni: '52109843', telefono: '976-543-210', email: 'e.suarez@andina.com',     licencia: 'A-IIIb', vencLicencia: '2025-07-20', estado: 'activo',    unidad: 'TK-4102', km: 88200,  viajes: 214, calificacion: 4.6, foto: 'person' },
-  { id: 3, codigo: 'CON-003', nombre: 'Jorge Ruiz',       dni: '38765012', telefono: '965-432-109', email: 'j.ruiz@andina.com',       licencia: 'A-IIIb', vencLicencia: '2025-09-01', estado: 'descanso',  unidad: 'TK-9931', km: 215900, viajes: 389, calificacion: 4.9, foto: 'person' },
-  { id: 4, codigo: 'CON-004', nombre: 'Carmen López',     dni: '61823490', telefono: '954-321-098', email: 'c.lopez@andina.com',      licencia: 'A-IIb',  vencLicencia: '2026-11-10', estado: 'activo',    unidad: 'TK-3314', km: 124500, viajes: 201, calificacion: 4.7, foto: 'person' },
-  { id: 5, codigo: 'CON-005', nombre: 'Luis Torres',      dni: '73912034', telefono: '943-210-987', email: 'l.torres@andina.com',     licencia: 'A-IIIb', vencLicencia: '2026-05-25', estado: 'activo',    unidad: 'TK-2201', km: 18300,  viajes: 45,  calificacion: 4.5, foto: 'person' },
-  { id: 6, codigo: 'CON-006', nombre: 'María Fernández',  dni: '85034561', telefono: '932-109-876', email: 'm.fernandez@andina.com',  licencia: 'A-IIb',  vencLicencia: '2025-06-30', estado: 'inactivo',  unidad: '—',       km: 67800,  viajes: 132, calificacion: 4.3, foto: 'person' },
-])
+// Los conductores viven en un store compartido (src/modules/conductores/store)
+// para que otros módulos, como el registro de carga de combustible en
+// Consumo, puedan listar los mismos conductores registrados aquí.
+const conductoresStore = useConductoresStore()
+const { conductores } = storeToRefs(conductoresStore)
 
 const estadoConfig = {
   activo:   { label: 'Activo',    clase: 'bg-emerald-100 text-emerald-800' },
